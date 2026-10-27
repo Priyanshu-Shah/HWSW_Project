@@ -1,0 +1,1040 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tdg.schema.json",
+  "title": "Task Dependency Graph (TDG)",
+  "description": "TDG schema v0.2. One document = graph part (written by the LLM stage) + optional cost map under `costs` (written by custom_hls). The cost map alone validates against #/$defs/cost_map. Conventions: SI units (s, bytes, W, Hz); all numbers are literals (no formulas). Any change to this file is a contract change (D5): bump schema_version and inform the partitioner team first.",
+  "x-semantic-rules": [
+    "R1 node ids unique; edge ids unique",
+    "R2 edge src/dst and cost-map ids refer to existing nodes/edges",
+    "R3 all edges (data + control) form a DAG",
+    "R4 every estimate: lo <= value <= hi",
+    "R5 resource keys and HW points fit the capacity of `platform` (platform library)",
+    "R6 affinity hw_only node must have >= 1 HW point (else infeasible, fb1)",
+    "R7 opaque node with no HW point is treated as sw_only",
+    "R8 every iteration node that is not hw_only has an SW cost",
+    "R9 ops_estimated vs ops_claimed within 2x (D1), else flagged",
+    "R10 objective must be {latency: 1.0} in the MVP (D3)",
+    "R11 deadline_s > arrival.period_s -> warning (cannot hold with sequential frames, D3)",
+    "R12 loop-nest vars unique within a node; reuse/unrollable vars and access keys exist"
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "graph",
+    "arrival",
+    "objective",
+    "platform",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional path/URL to this schema (editor support)."
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "schema_version",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "schema_version": {
+          "const": "0.2"
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "llm",
+                "manual",
+                "synthetic"
+              ]
+            },
+            "source": {
+              "type": "string",
+              "description": "What this graph was built from, e.g. the spec id (spec_v3)."
+            }
+          }
+        }
+      }
+    },
+    "arrival": {
+      "description": "How often the graph runs.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "one_shot",
+            "periodic",
+            "streaming"
+          ]
+        },
+        "period_s": {
+          "$ref": "#/$defs/positive_number"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "periodic",
+                  "streaming"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "period_s"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "one_shot"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "period_s"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "constraints": {
+      "description": "Optional hard limits. Omitted key = no limit.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deadline_s": {
+          "$ref": "#/$defs/positive_number"
+        },
+        "power_w_max": {
+          "$ref": "#/$defs/positive_number"
+        },
+        "energy_j_max": {
+          "$ref": "#/$defs/positive_number"
+        }
+      }
+    },
+    "objective": {
+      "description": "Weights over the optimization terms. MVP: {latency: 1.0} (D3, rule R10).",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "latency": {
+          "$ref": "#/$defs/weight"
+        },
+        "energy": {
+          "$ref": "#/$defs/weight"
+        },
+        "cost": {
+          "$ref": "#/$defs/weight"
+        }
+      }
+    },
+    "platform": {
+      "description": "Board id in the platform library, e.g. zcu104.",
+      "$ref": "#/$defs/identifier"
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "costs": {
+      "$ref": "#/$defs/cost_map"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    },
+    "positive_number": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "non_negative_number": {
+      "type": "number",
+      "minimum": 0
+    },
+    "positive_int": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "non_negative_int": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "weight": {
+      "type": "number",
+      "minimum": 0
+    },
+    "dtype": {
+      "enum": [
+        "int8",
+        "uint8",
+        "int16",
+        "int32",
+        "fp16",
+        "fp32"
+      ]
+    },
+    "estimate_source": {
+      "enum": [
+        "quickest",
+        "hls_report",
+        "profile_model",
+        "roofline",
+        "llm",
+        "library_default",
+        "measured",
+        "synthetic"
+      ]
+    },
+    "estimate": {
+      "description": "Every estimated quantity carries a range and a source (rule R4: lo <= value <= hi).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "lo",
+        "hi",
+        "source"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/non_negative_number"
+        },
+        "lo": {
+          "$ref": "#/$defs/non_negative_number"
+        },
+        "hi": {
+          "$ref": "#/$defs/non_negative_number"
+        },
+        "source": {
+          "$ref": "#/$defs/estimate_source"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "phase",
+        "affinity",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "description": "setup = runs once (excluded from latency); iteration = runs every period.",
+          "enum": [
+            "setup",
+            "iteration"
+          ]
+        },
+        "affinity": {
+          "enum": [
+            "sw_only",
+            "hw_only",
+            "any"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "opaque",
+            "loop_nest",
+            "template"
+          ]
+        },
+        "opaque": {
+          "$ref": "#/$defs/opaque"
+        },
+        "loop_nest": {
+          "$ref": "#/$defs/loop_nest"
+        },
+        "template": {
+          "$ref": "#/$defs/template"
+        },
+        "ops_claimed": {
+          "description": "LLM's own op count, for the 2x check against ops_estimated (R9).",
+          "$ref": "#/$defs/non_negative_number"
+        },
+        "ops_unit": {
+          "enum": [
+            "ops",
+            "macs"
+          ],
+          "default": "ops"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "opaque"
+            }
+          },
+          "required": [
+            "opaque"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "loop_nest"
+                ]
+              },
+              {
+                "required": [
+                  "template"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "loop_nest"
+            }
+          },
+          "required": [
+            "loop_nest",
+            "ops_claimed"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "opaque"
+                ]
+              },
+              {
+                "required": [
+                  "template"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "template"
+            }
+          },
+          "required": [
+            "template"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "opaque"
+                ]
+              },
+              {
+                "required": [
+                  "loop_nest"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "opaque": {
+      "description": "Work with no meaningful loop structure (I/O, OS calls). SW cost only.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sw_time_s",
+        "source"
+      ],
+      "properties": {
+        "sw_time_s": {
+          "$ref": "#/$defs/non_negative_number"
+        },
+        "source": {
+          "$ref": "#/$defs/estimate_source"
+        }
+      }
+    },
+    "loop_nest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arrays",
+        "loops",
+        "body"
+      ],
+      "properties": {
+        "node": {
+          "description": "Optional label; the owning node's id is authoritative.",
+          "type": "string"
+        },
+        "arrays": {
+          "description": "Every array the loops read or write, keyed by array name.",
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "#/$defs/identifier"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "shape",
+              "dtype",
+              "dir"
+            ],
+            "properties": {
+              "shape": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/positive_int"
+                }
+              },
+              "dtype": {
+                "$ref": "#/$defs/dtype"
+              },
+              "dir": {
+                "description": "in/out arrays cross the node boundary and give edge bytes.",
+                "enum": [
+                  "in",
+                  "out"
+                ]
+              },
+              "const": {
+                "description": "Read-only data such as weights or coefficients.",
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        },
+        "loops": {
+          "description": "Outermost first. Perfectly nested; ranges are trip counts.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "var",
+              "range"
+            ],
+            "properties": {
+              "var": {
+                "$ref": "#/$defs/identifier"
+              },
+              "range": {
+                "$ref": "#/$defs/positive_int"
+              }
+            }
+          }
+        },
+        "body": {
+          "description": "Operation counts per innermost iteration.",
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "mac": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "add": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "mul": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "div": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "cmp": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "logic": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "shift": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "sqrt": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "exp": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "load": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "store": {
+              "$ref": "#/$defs/non_negative_int"
+            }
+          }
+        },
+        "access": {
+          "description": "Access pattern per array name (keys must exist in `arrays`, R12).",
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/identifier"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pattern"
+            ],
+            "properties": {
+              "pattern": {
+                "enum": [
+                  "streaming",
+                  "sliding_window",
+                  "reuse",
+                  "random"
+                ]
+              },
+              "reuse": {
+                "description": "Loop vars over which the same elements are re-read.",
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/identifier"
+                }
+              }
+            }
+          }
+        },
+        "control": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "branches": {
+              "description": "Data-dependent branches per innermost iteration.",
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "control_heavy": {
+              "description": "Irregular code (data-dependent loops, pointer chasing); high HW cost (D1).",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "hints": {
+          "description": "Advisory only; custom_hls decides parallelism (D1).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "unrollable": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/identifier"
+              }
+            }
+          }
+        }
+      }
+    },
+    "template": {
+      "description": "Standard op; custom_hls expands it into a loop nest.",
+      "type": "object",
+      "required": [
+        "op",
+        "params"
+      ],
+      "properties": {
+        "op": {
+          "enum": [
+            "conv2d",
+            "gemm",
+            "pool",
+            "elementwise",
+            "reduce",
+            "memcpy"
+          ]
+        },
+        "params": {
+          "type": "object"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "op": {
+              "const": "conv2d"
+            },
+            "params": {
+              "$ref": "#/$defs/params_conv2d"
+            }
+          }
+        },
+        {
+          "properties": {
+            "op": {
+              "const": "gemm"
+            },
+            "params": {
+              "$ref": "#/$defs/params_gemm"
+            }
+          }
+        },
+        {
+          "properties": {
+            "op": {
+              "const": "pool"
+            },
+            "params": {
+              "$ref": "#/$defs/params_pool"
+            }
+          }
+        },
+        {
+          "properties": {
+            "op": {
+              "const": "elementwise"
+            },
+            "params": {
+              "$ref": "#/$defs/params_elementwise"
+            }
+          }
+        },
+        {
+          "properties": {
+            "op": {
+              "const": "reduce"
+            },
+            "params": {
+              "$ref": "#/$defs/params_reduce"
+            }
+          }
+        },
+        {
+          "properties": {
+            "op": {
+              "const": "memcpy"
+            },
+            "params": {
+              "$ref": "#/$defs/params_memcpy"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "params_conv2d": {
+      "description": "Input H×W×C_in, kernel K×K, output channels C_out.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "H",
+        "W",
+        "C_in",
+        "C_out",
+        "K",
+        "stride",
+        "dtype"
+      ],
+      "properties": {
+        "H": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "W": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "C_in": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "C_out": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "K": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "stride": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "padding": {
+          "$ref": "#/$defs/non_negative_int",
+          "default": 0
+        },
+        "groups": {
+          "description": "1 = normal conv; C_in = depthwise.",
+          "$ref": "#/$defs/positive_int",
+          "default": 1
+        },
+        "batch": {
+          "$ref": "#/$defs/positive_int",
+          "default": 1
+        },
+        "dtype": {
+          "$ref": "#/$defs/dtype"
+        }
+      }
+    },
+    "params_gemm": {
+      "description": "C[M×N] = A[M×K] · B[K×N].",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "M",
+        "N",
+        "K",
+        "dtype"
+      ],
+      "properties": {
+        "M": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "N": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "K": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "batch": {
+          "$ref": "#/$defs/positive_int",
+          "default": 1
+        },
+        "dtype": {
+          "$ref": "#/$defs/dtype"
+        }
+      }
+    },
+    "params_pool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "H",
+        "W",
+        "C",
+        "K",
+        "stride",
+        "mode",
+        "dtype"
+      ],
+      "properties": {
+        "H": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "W": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "C": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "K": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "stride": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "mode": {
+          "enum": [
+            "max",
+            "avg"
+          ]
+        },
+        "batch": {
+          "$ref": "#/$defs/positive_int",
+          "default": 1
+        },
+        "dtype": {
+          "$ref": "#/$defs/dtype"
+        }
+      }
+    },
+    "params_elementwise": {
+      "description": "Same op on every element (activation, normalize, add, scale).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elements",
+        "ops_per_element",
+        "inputs",
+        "dtype"
+      ],
+      "properties": {
+        "elements": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "ops_per_element": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "inputs": {
+          "description": "Number of input arrays (1 = unary, 2 = binary).",
+          "$ref": "#/$defs/positive_int"
+        },
+        "dtype": {
+          "$ref": "#/$defs/dtype"
+        }
+      }
+    },
+    "params_reduce": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elements",
+        "mode",
+        "dtype"
+      ],
+      "properties": {
+        "elements": {
+          "$ref": "#/$defs/positive_int"
+        },
+        "mode": {
+          "enum": [
+            "sum",
+            "max",
+            "min",
+            "mean"
+          ]
+        },
+        "outputs": {
+          "$ref": "#/$defs/positive_int",
+          "default": 1
+        },
+        "dtype": {
+          "$ref": "#/$defs/dtype"
+        }
+      }
+    },
+    "params_memcpy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes"
+      ],
+      "properties": {
+        "bytes": {
+          "$ref": "#/$defs/positive_int"
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "src",
+        "dst",
+        "kind",
+        "bytes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "src": {
+          "$ref": "#/$defs/identifier"
+        },
+        "dst": {
+          "$ref": "#/$defs/identifier"
+        },
+        "kind": {
+          "enum": [
+            "data",
+            "control"
+          ]
+        },
+        "bytes": {
+          "description": "Bytes moved per iteration. Control edges: 0.",
+          "$ref": "#/$defs/non_negative_int"
+        }
+      },
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "control"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "bytes": {
+            "const": 0
+          }
+        }
+      }
+    },
+    "cost_map": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodes"
+      ],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node_cost"
+          }
+        },
+        "edges": {
+          "description": "Optional overrides only. Default transfer time = setup_s + bytes / bandwidth from the platform file's default interface.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/edge_cost"
+          }
+        }
+      }
+    },
+    "node_cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "ops_estimated": {
+          "description": "Same unit as the node's ops_unit.",
+          "$ref": "#/$defs/non_negative_number"
+        },
+        "sw": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "time_s"
+          ],
+          "properties": {
+            "time_s": {
+              "$ref": "#/$defs/estimate"
+            },
+            "power_w": {
+              "description": "Optional; needed only for energy objectives/limits.",
+              "$ref": "#/$defs/non_negative_number"
+            }
+          }
+        },
+        "hw": {
+          "description": "HW design points; the partitioner picks at most one per node. [] = no HW option.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/hw_point"
+          }
+        }
+      }
+    },
+    "hw_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "point",
+        "time_s",
+        "resources"
+      ],
+      "properties": {
+        "point": {
+          "$ref": "#/$defs/identifier"
+        },
+        "parallelism": {
+          "description": "Metadata; ignored by the partitioner.",
+          "$ref": "#/$defs/positive_int"
+        },
+        "time_s": {
+          "$ref": "#/$defs/estimate"
+        },
+        "ii_s": {
+          "description": "Initiation interval when pipelined. Default = time_s.value.",
+          "$ref": "#/$defs/positive_number"
+        },
+        "power_w": {
+          "$ref": "#/$defs/non_negative_number"
+        },
+        "resources": {
+          "description": "Keys = platform capacity keys (R5).",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "lut": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "ff": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "dsp": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "bram18k": {
+              "$ref": "#/$defs/non_negative_int"
+            },
+            "uram": {
+              "$ref": "#/$defs/non_negative_int"
+            }
+          }
+        }
+      }
+    },
+    "edge_cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "minProperties": 2,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "interface": {
+          "description": "Interface name from the platform file, e.g. axi_hp0.",
+          "type": "string"
+        },
+        "time_s": {
+          "description": "Overrides the computed transfer time.",
+          "$ref": "#/$defs/estimate"
+        }
+      }
+    }
+  }
+}
