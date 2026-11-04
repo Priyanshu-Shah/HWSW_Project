@@ -1,0 +1,24 @@
+{
+  "graph": {"id": "matmul_batch", "schema_version": "0.2", "provenance": {"kind": "manual", "source": "test fixture"}},
+  "arrival": {"kind": "one_shot"},
+  "objective": {"latency": 1.0},
+  "platform": "pynq_z2",
+  "nodes": [
+    {"id": "n1", "name": "load_inputs", "phase": "iteration", "affinity": "sw_only", "kind": "opaque",
+     "opaque": {"sw_time_s": 0.004, "source": "library_default"}},
+    {"id": "n2", "name": "matrix_multiply", "phase": "iteration", "affinity": "any", "kind": "template",
+     "template": {"op": "gemm", "params": {"M": 256, "N": 256, "K": 256, "dtype": "int16"}}},
+    {"id": "n3", "name": "relu", "phase": "iteration", "affinity": "any", "kind": "template",
+     "template": {"op": "elementwise", "params": {"elements": 65536, "ops_per_element": 1, "inputs": 1, "dtype": "int16"}}},
+    {"id": "n4", "name": "sum_rows", "phase": "iteration", "affinity": "any", "kind": "template",
+     "template": {"op": "reduce", "params": {"elements": 65536, "mode": "sum", "outputs": 256, "dtype": "int16"}}},
+    {"id": "n5", "name": "copy_result", "phase": "iteration", "affinity": "any", "kind": "template",
+     "template": {"op": "memcpy", "params": {"bytes": 512}}}
+  ],
+  "edges": [
+    {"id": "e1", "src": "n1", "dst": "n2", "kind": "data", "bytes": 262144},
+    {"id": "e2", "src": "n2", "dst": "n3", "kind": "data", "bytes": 131072},
+    {"id": "e3", "src": "n3", "dst": "n4", "kind": "data", "bytes": 131072},
+    {"id": "e4", "src": "n4", "dst": "n5", "kind": "data", "bytes": 512}
+  ]
+}

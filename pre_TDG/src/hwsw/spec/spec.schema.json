@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spec.schema.json",
+  "title": "Task spec (internal to pre_TDG)",
+  "description": "What the clarification agent (stage A) hands to the TDG builder (stage B). Not part of the contract with other teams; may change freely. `open_questions` must be empty before stage B runs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_summary", "platform", "arrival", "timing", "assumptions", "open_questions"],
+  "properties": {
+    "task_summary": {"type": "string", "minLength": 1},
+    "platform": {"description": "Board id from library/index.json.", "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"},
+    "arrival": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"enum": ["one_shot", "periodic", "streaming"]},
+        "period_s": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "allOf": [
+        {"if": {"properties": {"kind": {"enum": ["periodic", "streaming"]}}}, "then": {"required": ["period_s"]}},
+        {"if": {"properties": {"kind": {"const": "one_shot"}}}, "then": {"not": {"required": ["period_s"]}}}
+      ]
+    },
+    "timing": {
+      "description": "D3: how the task's timing requirement became a latency deadline.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hardness", "derived_from"],
+      "properties": {
+        "deadline_s": {"type": "number", "exclusiveMinimum": 0},
+        "hardness": {"enum": ["hard", "soft", "none"]},
+        "derived_from": {"description": "How deadline_s was obtained, e.g. '30 fps, sequential (D3)'.", "type": "string"}
+      },
+      "allOf": [
+        {"if": {"properties": {"hardness": {"enum": ["hard", "soft"]}}}, "then": {"required": ["deadline_s"]}},
+        {"if": {"properties": {"hardness": {"const": "none"}}}, "then": {"not": {"required": ["deadline_s"]}}}
+      ]
+    },
+    "assumptions": {
+      "description": "Every fact the agent decided without the user stating it, with where it came from.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "value", "source", "confidence"],
+        "properties": {
+          "key": {"type": "string", "minLength": 1},
+          "value": {"type": "string", "minLength": 1},
+          "source": {"enum": ["web", "library", "default", "user"]},
+          "url": {"type": "string"},
+          "confidence": {"enum": ["low", "medium", "high"]}
+        },
+        "if": {"properties": {"source": {"const": "web"}}},
+        "then": {"required": ["url"], "properties": {"url": {"minLength": 1}}}
+      }
+    },
+    "open_questions": {
+      "description": "Questions still unanswered. Must be empty before the TDG builder runs.",
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

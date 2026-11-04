@@ -11,3 +11,5 @@ Rules:
 - Format is defined by `../TDG/` (D1, D3, D4). Board specs come from `../library/`.
 - **Never edit `../TDG/`, `../library/` or `../post_TDG/`. If a format change is needed, stop and tell the user** (other teams must be informed).
 - `spec.json`, logs and custom_hls constants are internal.
+- Code: `src/hwsw/`; tests mirror it. Check with `.venv/Scripts/python -m pytest` and `-m ruff check .`
+- Status: validator, custom_hls, CLI done; LLM stages next (need the Thor). Read `custom_hls/README.md` and `validation/README.md` before changing them.

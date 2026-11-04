@@ -54,15 +54,14 @@ Each run writes everything into `runs/<timestamp>_<graph_id>/`, including the LL
 | TDG schema + examples | `../TDG/schemas/` | exists |
 | Board specs: `index.json`, `boards/<id>.json` (format in `../library/README.md`) | `../library/` | hand-made files for 2–3 boards in `tests/fixtures/platforms/` |
 
-We never edit those folders. The validator and generated models live here
-(`src/validate.py`, `src/models/`).
+We never edit those folders. The validator lives here (`src/hwsw/validation/`).
 
 ## 4. Tech stack
 
 | Concern | Choice |
 |---|---|
 | Language / packaging | Python 3.11+, `uv`, `ruff`, `pytest` |
-| Schemas | `../TDG/schemas/*.json` are the source of truth; Pydantic v2 models generated from them (`datamodel-code-generator`); sub-schemas passed to Ollama `format` |
+| Schemas | `../TDG/schemas/*.json` are the source of truth. The validator checks plain dicts with `jsonschema`; no generated model classes. Sub-schemas are passed to Ollama `format` |
 | File format | JSON everywhere; `jsonschema` for validation |
 | Graph checks | `networkx` (DAG check, topological order, critical path) |
 | LLM client | `openai` package → Ollama on Jetson AGX Thor (D2), `num_ctx ≥ 32768` |
@@ -74,36 +73,36 @@ We never edit those folders. The validator and generated models live here
 | Agent loop | hand-written for the MVP (~100 lines); move to LangGraph only if the state gets complex |
 | Logging | one JSONL file per run: every prompt, response, tool call, token count, latency |
 
-## 5. Planned layout
+## 5. Layout
+
+`[done]` exists and is tested. `[next]` is not written yet.
 
 ```text
 pre_TDG/
-  src/
-    models/         Pydantic models generated from ../TDG/schemas (do not hand-edit)
-    validate.py     JSON Schema check + semantic rules R1–R12 (Phase 1)
-    llm/
-      client.py     Ollama/OpenAI-compatible wrapper: retries, schema output, logging
-      tools/        ask_user.py, web_search.py, fetch_page.py, platform_lookup.py
-      agent.py      generic tool-calling loop
-      clarify.py    stage A
-      tdg_builder.py stage B
-      prompts/      one .md file per prompt, versioned
-    custom_hls/
-      templates/    conv2d.py, gemm.py, pool.py, elementwise.py, reduce.py, memcpy.py
-      analyze.py    loop nest → ops, iterations, memory traffic, on-chip buffers
-      hw_model.py   design points: P → cycles, II, LUT, FF, DSP, BRAM18K
-      sw_model.py   ops → CPU time
-      estimate.py   tdg.json → tdg.costed.json (entry point)
-      bounds.py     sanity check: all-SW latency and best-case latency
-      constants.json calibrated per-op constants, per board family
-    cli.py          clarify | build | cost | validate | bounds | run
-  calibration/      Vitis HLS reference kernels (C++), synthesis reports, fit scripts
-  benchmarks/
-    tasks/          t01_objdet.md … t10_*.md   (task text + answers to likely questions)
-    reference/      t01_objdet.tdg.json …     (hand-made reference TDGs)
-  tests/            incl. fixtures/ (valid and invalid TDGs, platforms/)
-  runs/             (git-ignored)
+  pyproject.toml          package `hwsw`, `hwsw` command; venv in .venv/ (git-ignored)
+  src/hwsw/
+    cli.py                [done] validate | cost | bounds      [next] clarify | build | run
+    repo_paths.py  json_files.py                               [done] shared helpers
+    platforms/            [done] board files -> typed Board
+      board_model.py  board_loader.py
+    validation/           [done] TDG schema + rules R1-R12, one module per group of rules
+      json_schema_rules.py  graph_rules.py  loop_nest_rules.py  constraint_rules.py
+      cost_map_rules.py  platform_rules.py  tdg_validator.py  issue.py  id_listing.py
+    spec/                 [done] spec.schema.json, spec_validation.py
+    custom_hls/           [done] loop nests + board -> cost map
+      templates/          conv2d  gemm  pool  elementwise  reduce  memcpy
+      loop_nest.py  loop_nest_analysis.py  hw_design_points.py  sw_time.py
+      node_costing.py  estimate_tdg.py  bounds.py  constants.py  estimate_values.py  data_types.py
+      constants.json      [next] written by calibration against Vitis HLS
+    llm/                  [next] needs the Thor
+      client.py  agent.py  clarify.py  tdg_builder.py  tools/  prompts/
+  calibration/            [next] Vitis HLS reference kernels, reports, fit scripts
+  benchmarks/             [next] tasks/ and reference/ (hand-made reference TDGs)
+  tests/                  [done] mirrors src/hwsw; fixtures/ (platforms/, tdgs/), helpers.py
+  runs/                   (git-ignored)
 ```
+
+Run: `.venv/Scripts/python -m pytest` and `.venv/Scripts/python -m ruff check .` from `pre_TDG/`.
 
 ## 6. Phases (estimates for ~2 people per track)
 
@@ -118,9 +117,8 @@ pre_TDG/
 **Exit:** all three models answer a tool call and a schema-constrained reply over the lab network;
 Vitis HLS produces a report for a toy kernel.
 
-### Phase 1: Schemas, validator and spec (week 1–2, both tracks) — highest priority
-- Generate Pydantic models from `../TDG/schemas/tdg.schema.json` into `src/models/`.
-- Validator `src/validate.py`: JSON Schema check first, then the semantic rules R1–R12 listed in
+### Phase 1: Schemas, validator and spec (week 1–2, both tracks) — highest priority — DONE
+- Validator `src/hwsw/validation/`: JSON Schema check first, then the semantic rules R1–R12 listed in
   `tdg.schema.json` (ids, references, DAG, `lo ≤ value ≤ hi`, platform capacity, `hw_only`
   points, 2× ops check, D3 objective and deadline rules). R5 needs the board files.
 - Error messages are written for an LLM to read ("edge e4: dst 'n9' does not exist; existing
@@ -190,19 +188,19 @@ Staged generation, one schema-constrained call per step, each checked before the
 
 **Exit:** ≥ 95% valid TDGs within the repair budget on the benchmark set.
 
-### Phase 5: custom_hls (week 2–6, custom_hls track)
+### Phase 5: custom_hls (week 2–6, custom_hls track) — built, uncalibrated
 
 **Input:** `tdg.json` + a board file. **Output:** `tdg.costed.json`.
 
 1. **Templates → loop nests** (`templates/`): `conv2d`, `gemm`, `pool`, `elementwise`, `reduce`,
    `memcpy`. Each turns `template.params` into a D1 loop nest, so everything below handles only
    one format.
-2. **Analysis** (`analyze.py`), per loop nest:
+2. **Analysis** (`loop_nest_analysis.py`), per loop nest:
    - ops = product of loop ranges × body ops (written as `ops_estimated`, same unit as `ops_claimed`);
    - off-chip bytes from `in`/`out` arrays; on-chip buffers from access patterns
      (sliding window → line buffer of (K−1)·W·bytes; reuse → full array; streaming → none);
    - loop-carried dependencies or `control_heavy` → II > 1.
-3. **HW design points** (`hw_model.py`):
+3. **HW design points** (`hw_design_points.py`):
    - P from unrolling the inner loops (hints from the LLM are advisory), e.g. P ∈ {small, medium,
      large}; drop points that exceed the board capacity;
    - cycles = iterations / P × II + pipeline depth; `time_s` = max(compute time, memory time)
@@ -211,7 +209,7 @@ Staged generation, one schema-constrained call per step, each checked before the
      parallel reads); LUT/FF = P × per-op cost + control overhead;
    - `ii_s` for the whole node when pipelined; `lo`/`hi` from the calibration error (±30% to start);
      `source: roofline` until calibrated.
-4. **SW model** (`sw_model.py`): ops / (freq × cores-used × ops_per_cycle(dtype) × efficiency),
+4. **SW model** (`sw_time.py`): ops / (freq × cores-used × ops_per_cycle(dtype) × efficiency),
    plus memory time for large arrays and a branch penalty for `control_heavy`.
    `source: profile_model`.
 5. **Opaque nodes:** copy `opaque.sw_time_s` into the cost map, so the partitioner reads only `costs`.
@@ -225,10 +223,19 @@ Staged generation, one schema-constrained call per step, each checked before the
 8. **Tests:** the 3×3 conv on 2048×2048 int16 worked example matches the hand calculation;
    every template's op count matches its closed form; outputs pass the validator.
 
+**Conventions as built** (all constants are in `constants.py`, uncalibrated until step 7):
+- One multiply-accumulate counts as one op; `load`/`store` are not ops. `ops_unit: macs` counts only `mac`.
+- Every array crosses DRAM once; reuse comes from on-chip buffers (line buffer for a sliding window,
+  the whole array for `reuse`, const lookup tables for `random`). Large `reuse` arrays (for example
+  gemm's B, untiled) can make a node not fit, which correctly gives it no hardware option.
+- Design points: P = unroll hint x (1, 4, 16); if none fit the board the hint is ignored (P = 1, 4, 16).
+- FPGA memory bandwidth is the smaller of DRAM and the board's default interface; the CPU gets DRAM.
+- Software baseline is single-threaded (`sw_cores_used = 1`). Sources: HW `roofline`, SW `profile_model`.
+
 **Exit:** `hwsw cost tdg.json` writes a valid `tdg.costed.json` for all example TDGs; HW latency
 and resources within ±50% of Vitis HLS on the calibration kernels.
 
-### Phase 6: Bounds check (week 4, custom_hls track)
+### Phase 6: Bounds check (week 4, custom_hls track) — DONE
 A quick sanity check of a costed TDG without a partitioner (not a replacement for it):
 - **All-SW latency:** longest path through iteration nodes using SW times.
 - **Best case:** longest path using each node's fastest option, no comm, no resource limit.

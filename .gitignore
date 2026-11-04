@@ -1,0 +1,8 @@
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Run outputs (pre_TDG/runs/<timestamp>_<graph_id>/)
+runs/

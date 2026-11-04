@@ -1,0 +1,27 @@
+{
+  "id": "zcu104",
+  "name": "Xilinx ZCU104 (test fixture)",
+  "summary": "Zynq UltraScale+ ZU7EV: 4x Cortex-A53 @ 1.2 GHz, 230k LUT, 1728 DSP",
+  "cpu": {
+    "name": "cortex-a53", "cores": 4, "freq_hz": 1.2e9,
+    "ops_per_cycle": {"int8": 16, "uint8": 16, "int16": 8, "int32": 4, "fp16": 0, "fp32": 4},
+    "efficiency": 0.3,
+    "provenance": {"source": "estimated", "url": "", "note": "fixture values, not authoritative"}
+  },
+  "fpga": {
+    "part": "xczu7ev-ffvc1156-2-e", "fclk_hz": 2.0e8,
+    "capacity": {"lut": 230400, "ff": 460800, "dsp": 1728, "bram18k": 624, "uram": 96},
+    "provenance": {"source": "datasheet", "url": "", "note": "fixture values, not authoritative"}
+  },
+  "dram": {
+    "bytes": 2147483648, "bandwidth_Bps": 1.0e10,
+    "provenance": {"source": "estimated", "url": "", "note": "fixture values, not authoritative"}
+  },
+  "interfaces": {
+    "default": "axi_hp0",
+    "axi_hp0": {
+      "bandwidth_Bps": 2.0e9, "setup_s": 1.0e-5, "note": "AXI HP0, DMA",
+      "provenance": {"source": "estimated", "url": "", "note": "fixture values, not authoritative"}
+    }
+  }
+}
