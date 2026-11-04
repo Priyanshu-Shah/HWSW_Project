@@ -1,0 +1,8 @@
+# Keep line endings identical on every machine: text files use LF in the repo and in the
+# working copy, whatever core.autocrlf says on the developer's machine.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
