@@ -94,6 +94,8 @@ pre_TDG/
       loop_nest.py  loop_nest_analysis.py  hw_design_points.py  sw_time.py
       node_costing.py  estimate_tdg.py  bounds.py  constants.py  estimate_values.py  data_types.py
       constants.json      [next] written by calibration against Vitis HLS
+    conversation/         [done] what the user sees: events.py, agent_protocol.py (the interface the
+                          LLM agent will implement), scripted_agent.py (stand-in, no LLM), example_graphs.py
     llm/                  [next] needs the Thor
       client.py  agent.py  clarify.py  tdg_builder.py  tools/  prompts/
   calibration/            [next] Vitis HLS reference kernels, reports, fit scripts
@@ -101,6 +103,8 @@ pre_TDG/
   tests/                  [done] mirrors src/hwsw; fixtures/ (platforms/, tdgs/), helpers.py
   runs/                   (git-ignored)
 ```
+
+The web front end (`../app/`) depends on `conversation/` and the `hwsw` functions; the real agent plugs in through `create_app(agent_factory=...)`.
 
 Run: `.venv/Scripts/python -m pytest` and `.venv/Scripts/python -m ruff check .` from `pre_TDG/`.
 

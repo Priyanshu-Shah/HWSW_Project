@@ -28,3 +28,4 @@ HW/SW partition + metrics
 | `TDG/` | Shared TDG schema; the interface between the teams |
 | `post_TDG/` | Costed TDG → HW/SW partition (partitioner team) |
 | `library/` | Board specifications (library team) |
+| `app/` | Web page: chat with the pipeline and view the task graph |

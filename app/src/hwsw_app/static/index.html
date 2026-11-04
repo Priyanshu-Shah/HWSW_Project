@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HW/SW Partitioning</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>HW/SW partitioning</h1>
+    <span id="boards-chip" class="chip" title="Where the board specs come from"></span>
+  </header>
+
+  <main>
+    <section id="chat" aria-label="Conversation">
+      <div class="panel-title">
+        <span>Conversation</span>
+        <button id="new-conversation" type="button" class="link">New conversation</button>
+      </div>
+      <div id="messages" aria-live="polite"></div>
+      <form id="composer">
+        <textarea id="composer-input" rows="2"
+                  placeholder="Describe the task, e.g. real-time object detection on 720p video"></textarea>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+
+    <div id="chat-splitter" class="splitter splitter-col" role="separator" aria-orientation="vertical"
+         tabindex="0" title="Drag to resize"
+         aria-label="Resize the conversation pane (drag, or arrow keys; double-click to reset)"></div>
+
+    <section id="workspace" aria-label="Task graph">
+      <div id="toolbar">
+        <select id="example-select" aria-label="Example graph"></select>
+        <button id="load-example" type="button">Load example</button>
+        <span class="spacer"></span>
+        <button id="validate" type="button" disabled>Validate</button>
+        <button id="cost" type="button" disabled>Cost it</button>
+        <button id="download" type="button" class="link" disabled>Download JSON</button>
+      </div>
+
+      <div id="status" role="status"></div>
+      <div id="bounds" hidden></div>
+
+      <nav id="tabs" aria-label="Views">
+        <button type="button" data-tab="graph" class="active">Graph</button>
+        <button type="button" data-tab="json">JSON</button>
+        <button type="button" data-tab="issues">Issues <span id="issue-count" class="count" hidden></span></button>
+      </nav>
+
+      <div id="tab-graph" class="tab">
+        <div id="graph-area">
+          <div id="graph"></div>
+          <div id="empty-graph">No graph yet. Describe a task in the conversation, or load an example.</div>
+        </div>
+        <div id="legend">
+          <span><i class="swatch sw"></i>CPU only</span>
+          <span><i class="swatch hw"></i>FPGA only</span>
+          <span><i class="swatch any"></i>either</span>
+          <span><i class="swatch setup"></i>runs once (setup)</span>
+        </div>
+        <div id="details-splitter" class="splitter splitter-row" role="separator"
+             aria-orientation="horizontal" tabindex="0"
+             aria-label="Resize the details panel (drag, or arrow keys; double-click to reset)"
+             title="Drag to resize"></div>
+        <aside id="details"><p class="muted">Click a task to see its details.</p></aside>
+      </div>
+      <div id="tab-json" class="tab" hidden><pre id="json-view"></pre></div>
+      <div id="tab-issues" class="tab" hidden><ul id="issues"></ul></div>
+    </section>
+  </main>
+
+  <script src="vendor/cytoscape.min.js"></script>
+  <script src="vendor/dagre.min.js"></script>
+  <script src="vendor/cytoscape-dagre.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

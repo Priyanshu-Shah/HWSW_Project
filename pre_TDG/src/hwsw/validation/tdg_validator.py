@@ -36,8 +36,14 @@ def validate_tdg(tdg: dict, board: Board | None = None) -> ValidationReport:
 
 
 def validate_tdg_file(path: Path, boards_dir: Path = LIBRARY_BOARDS_DIR) -> ValidationReport:
-    """Like `validate_tdg`, loading the board named by the TDG's `platform` field."""
-    tdg = read_json(path)
+    """Like `validate_tdg_against_boards`, for a TDG stored in a JSON file."""
+    return validate_tdg_against_boards(read_json(path), boards_dir)
+
+
+def validate_tdg_against_boards(
+    tdg: dict, boards_dir: Path = LIBRARY_BOARDS_DIR
+) -> ValidationReport:
+    """Like `validate_tdg`, loading the TDG's `platform` board from `boards_dir`."""
     board = None
     if isinstance(tdg, dict) and isinstance(tdg.get("platform"), str):
         try:

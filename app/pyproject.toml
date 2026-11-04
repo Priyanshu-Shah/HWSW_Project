@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hwsw-app"
+version = "0.1.0"
+description = "Web front end: chat with the pipeline and view the TDG as a graph"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "hwsw-pre-tdg",  # install pre_TDG first: pip install -e pre_TDG
+    "typer>=0.12",
+    "uvicorn>=0.29",
+]
+
+[project.optional-dependencies]
+dev = ["httpx2>=2.0", "pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+hwsw-app = "hwsw_app.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+hwsw_app = ["static/*", "static/js/*", "static/vendor/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N"]
