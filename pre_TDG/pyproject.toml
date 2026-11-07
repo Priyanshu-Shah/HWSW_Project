@@ -8,10 +8,13 @@ version = "0.1.0"
 description = "English task -> costed TDG: LLM pipeline and custom_hls"
 requires-python = ">=3.11"
 dependencies = [
+    "ddgs>=9",
+    "httpx>=0.27",
     "jsonschema>=4.21",
     "networkx>=3.2",
     "pydantic>=2.6",
     "rich>=13",
+    "trafilatura>=2",
     "typer>=0.12",
 ]
 
@@ -25,7 +28,7 @@ hwsw = "hwsw.cli:app"
 where = ["src"]
 
 [tool.setuptools.package-data]
-hwsw = ["spec/*.json", "custom_hls/*.json"]
+hwsw = ["spec/*.json", "custom_hls/*.json", "llm/prompts/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

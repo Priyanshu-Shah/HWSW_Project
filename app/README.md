@@ -7,10 +7,14 @@ each task's CPU time, FPGA options and the latency bounds), **Download JSON**.
 
 ## Status
 
-The LLM is **not connected yet**. The chat is answered by `ScriptedAgent` (in
-`pre_TDG/src/hwsw/conversation/`): it asks four fixed questions and then hands over one of the
-ready-made example graphs, chosen by keywords. Everything after that (validate, cost, bounds) is the
-real code.
+By default the chat is answered by the **LLM pipeline** (`PipelineAgent` in
+`pre_TDG/src/hwsw/llm/`, gpt-oss:120b on Ollama). Stage A looks up boards and facts on the web,
+asks question batches, and ends with the assumptions and the task spec. Stage B then builds the
+task graph, which takes a few minutes. Each conversation is logged in `pre_TDG/runs/<time>_chat/`.
+
+`--agent scripted` uses `ScriptedAgent` instead (no LLM): it asks four fixed questions and then
+hands over one of the ready-made example graphs, chosen by keywords. Everything after that
+(validate, cost, bounds) is the real code.
 
 When no board files exist in `library/boards`, the app uses the test fixture boards and shows a
 yellow "fixtures" chip: those numbers are not authoritative.
@@ -19,16 +23,19 @@ yellow "fixtures" chip: those numbers are not authoritative.
 
 The app shares the environment of `pre_TDG` (from the repository root):
 
+On Windows the venv folder is `.venv/Scripts/` instead of `.venv/bin/`.
+
 ```text
-pre_TDG/.venv/Scripts/python -m pip install -e "pre_TDG[dev]" -e "app[dev]"
-pre_TDG/.venv/Scripts/hwsw-app --port 8000            # then open http://localhost:8000
-pre_TDG/.venv/Scripts/hwsw-app --host 0.0.0.0         # reachable from another machine (no login: lab network only)
+pre_TDG/.venv/bin/python -m pip install -e "pre_TDG[dev]" -e "app[dev]"
+pre_TDG/.venv/bin/hwsw-app --port 8000                # then open http://localhost:8000
+pre_TDG/.venv/bin/hwsw-app --host 0.0.0.0             # reachable from another machine (no login: lab network only)
+pre_TDG/.venv/bin/hwsw-app --agent scripted           # no LLM needed
 ```
 
 On the Thor, run it there and open it from your laptop (same network, or an SSH tunnel:
 `ssh -L 8000:localhost:8000 <thor>`). `HWSW_BOARDS_DIR` overrides the board folder.
 
-Tests: `pre_TDG/.venv/Scripts/python -m pytest` from `app/` (API tests, plus the Node tests for the
+Tests: `pre_TDG/.venv/bin/python -m pytest` from `app/` (API tests, plus the Node tests for the
 pure JavaScript if Node is installed).
 
 ## How it fits together
@@ -53,7 +60,10 @@ that exist; richer UI (for example per-question help, editing assumptions) is ad
 ## TODO
 
 - [ ] Look at the page in a real browser and fix layout issues (written and tested without one)
-- [ ] Real agent (needs the Thor); token streaming into one growing message
+- [x] Real agent (stages A and B)
+- [ ] Token streaming into one growing message (replies take tens of seconds now)
+- [x] Question answers are text boxes (choices offered in a list), so the user can answer
+      outside the agent's choices
 - [ ] Chat UI for the question batches: skip/"use all suggestions", editing earlier answers
 - [ ] Show the specification and assumptions beside the graph, not only in the chat
 - [ ] Show a node's design points on the graph (choose a point and see resource use)

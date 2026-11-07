@@ -1,0 +1,360 @@
+{
+  "graph": {
+    "id": "t08_jpeg_encode",
+    "schema_version": "0.2",
+    "provenance": {
+      "kind": "manual",
+      "source": "benchmark reference: JPEG encoding of 1080p frames"
+    }
+  },
+  "arrival": {
+    "kind": "streaming",
+    "period_s": 0.03333333333333333
+  },
+  "objective": {
+    "latency": 1.0
+  },
+  "platform": "zcu104",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "capture_frame",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.002,
+        "source": "library_default"
+      }
+    },
+    {
+      "id": "n2",
+      "name": "rgb_to_ycbcr",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "rgb": {
+            "shape": [
+              1080,
+              1920,
+              3
+            ],
+            "dtype": "uint8",
+            "dir": "in"
+          },
+          "ycbcr": {
+            "shape": [
+              1080,
+              1920,
+              3
+            ],
+            "dtype": "uint8",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "y",
+            "range": 1080
+          },
+          {
+            "var": "x",
+            "range": 1920
+          },
+          {
+            "var": "c",
+            "range": 3
+          }
+        ],
+        "body": {
+          "mac": 3
+        },
+        "access": {
+          "rgb": {
+            "pattern": "streaming"
+          }
+        },
+        "hints": {
+          "unrollable": [
+            "c"
+          ]
+        }
+      },
+      "ops_claimed": 18662400,
+      "ops_unit": "macs"
+    },
+    {
+      "id": "n3",
+      "name": "chroma_subsample",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "chroma": {
+            "shape": [
+              1080,
+              1920,
+              2
+            ],
+            "dtype": "uint8",
+            "dir": "in"
+          },
+          "subsampled": {
+            "shape": [
+              540,
+              960,
+              2
+            ],
+            "dtype": "uint8",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "y",
+            "range": 540
+          },
+          {
+            "var": "x",
+            "range": 960
+          },
+          {
+            "var": "c",
+            "range": 2
+          },
+          {
+            "var": "k",
+            "range": 4
+          }
+        ],
+        "body": {
+          "add": 1
+        },
+        "access": {
+          "chroma": {
+            "pattern": "sliding_window",
+            "reuse": [
+              "k"
+            ]
+          }
+        }
+      },
+      "ops_claimed": 4147200,
+      "ops_unit": "ops"
+    },
+    {
+      "id": "n4",
+      "name": "dct_8x8",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "blocks": {
+            "shape": [
+              48600,
+              8,
+              8
+            ],
+            "dtype": "uint8",
+            "dir": "in"
+          },
+          "basis": {
+            "shape": [
+              8,
+              8
+            ],
+            "dtype": "int16",
+            "dir": "in",
+            "const": true
+          },
+          "coefficients": {
+            "shape": [
+              48600,
+              8,
+              8
+            ],
+            "dtype": "int16",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "block",
+            "range": 48600
+          },
+          {
+            "var": "pass",
+            "range": 2
+          },
+          {
+            "var": "i",
+            "range": 8
+          },
+          {
+            "var": "j",
+            "range": 8
+          },
+          {
+            "var": "k",
+            "range": 8
+          }
+        ],
+        "body": {
+          "mac": 1
+        },
+        "access": {
+          "blocks": {
+            "pattern": "streaming"
+          },
+          "basis": {
+            "pattern": "reuse"
+          }
+        },
+        "hints": {
+          "unrollable": [
+            "k"
+          ]
+        }
+      },
+      "ops_claimed": 49766400,
+      "ops_unit": "macs"
+    },
+    {
+      "id": "n5",
+      "name": "quantize",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "elementwise",
+        "params": {
+          "elements": 3110400,
+          "ops_per_element": 1,
+          "inputs": 2,
+          "dtype": "int16"
+        }
+      }
+    },
+    {
+      "id": "n6",
+      "name": "entropy_encode",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "coefficients": {
+            "shape": [
+              48600,
+              64
+            ],
+            "dtype": "int16",
+            "dir": "in"
+          },
+          "bitstream": {
+            "shape": [
+              518400
+            ],
+            "dtype": "uint8",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "block",
+            "range": 48600
+          },
+          {
+            "var": "coefficient",
+            "range": 64
+          }
+        ],
+        "body": {
+          "logic": 3,
+          "shift": 2,
+          "cmp": 2
+        },
+        "access": {
+          "coefficients": {
+            "pattern": "random"
+          }
+        },
+        "control": {
+          "branches": 2,
+          "control_heavy": true
+        }
+      },
+      "ops_claimed": 21772800,
+      "ops_unit": "ops"
+    },
+    {
+      "id": "n7",
+      "name": "write_jpeg",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.001,
+        "source": "library_default"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "src": "n1",
+      "dst": "n2",
+      "kind": "data",
+      "bytes": 6220800
+    },
+    {
+      "id": "e2",
+      "src": "n2",
+      "dst": "n3",
+      "kind": "data",
+      "bytes": 4147200
+    },
+    {
+      "id": "e3",
+      "src": "n2",
+      "dst": "n4",
+      "kind": "data",
+      "bytes": 2073600
+    },
+    {
+      "id": "e4",
+      "src": "n3",
+      "dst": "n4",
+      "kind": "data",
+      "bytes": 1036800
+    },
+    {
+      "id": "e5",
+      "src": "n4",
+      "dst": "n5",
+      "kind": "data",
+      "bytes": 6220800
+    },
+    {
+      "id": "e6",
+      "src": "n5",
+      "dst": "n6",
+      "kind": "data",
+      "bytes": 6220800
+    },
+    {
+      "id": "e7",
+      "src": "n6",
+      "dst": "n7",
+      "kind": "data",
+      "bytes": 518400
+    }
+  ],
+  "constraints": {
+    "deadline_s": 0.03333333333333333
+  }
+}

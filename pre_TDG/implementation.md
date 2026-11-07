@@ -81,7 +81,7 @@ We never edit those folders. The validator lives here (`src/hwsw/validation/`).
 pre_TDG/
   pyproject.toml          package `hwsw`, `hwsw` command; venv in .venv/ (git-ignored)
   src/hwsw/
-    cli.py                [done] validate | cost | bounds      [next] clarify | build | run
+    cli.py                [done] validate | cost | bounds | clarify | build | run | bench
     repo_paths.py  json_files.py                               [done] shared helpers
     platforms/            [done] board files -> typed Board
       board_model.py  board_loader.py
@@ -96,17 +96,27 @@ pre_TDG/
       constants.json      [next] written by calibration against Vitis HLS
     conversation/         [done] what the user sees: events.py, agent_protocol.py (the interface the
                           LLM agent will implement), scripted_agent.py (stand-in, no LLM), example_graphs.py
-    llm/                  [next] needs the Thor
-      client.py  agent.py  clarify.py  tdg_builder.py  tools/  prompts/
+    benchmarks/           [done] scripted user, scoring, runner (`hwsw bench`)
+    llm/                  Ollama on the Thor (D2)
+      client.py           [done] chat(), chat_json() (schema in the prompt, checked, repaired)
+      tool_loop.py        [done] tool calls until a final tool (ask_user, submit_spec)
+      run_log.py          [done] runs/<time>_<name>/llm.jsonl
+      tools/              [done] platform_lookup, web_search, fetch_page (cached in .cache/)
+      clarify.py          [done] stage A: ClarificationAgent (a ConversationAgent) -> spec
+      tdg_builder.py      [done] stage B: spec -> tdg.json (steps 1-5 of Phase 4)
+      formulas.py  schema_parts.py   [done] size formulas -> literals (D4); prompt-sized schemas
+      pipeline_agent.py   [done] A then B in one conversation (used by the app and `hwsw run`)
+      prompts/            [done] clarify.md, tdg_builder.md
   calibration/            [next] Vitis HLS reference kernels, reports, fit scripts
-  benchmarks/             [next] tasks/ and reference/ (hand-made reference TDGs)
+  benchmarks/             [done] 10 tasks, reference TDGs, results/ (see its README)
   tests/                  [done] mirrors src/hwsw; fixtures/ (platforms/, tdgs/), helpers.py
   runs/                   (git-ignored)
 ```
 
 The web front end (`../app/`) depends on `conversation/` and the `hwsw` functions; the real agent plugs in through `create_app(agent_factory=...)`.
 
-Run: `.venv/Scripts/python -m pytest` and `.venv/Scripts/python -m ruff check .` from `pre_TDG/`.
+Run: `.venv/bin/python -m pytest` and `.venv/bin/python -m ruff check .` from `pre_TDG/`
+(`.venv/Scripts/` on Windows).
 
 ## 6. Phases (estimates for ~2 people per track)
 
@@ -170,7 +180,7 @@ Vitis HLS produces a report for a toy kernel.
 - Output: `spec.json`, validated; `open_questions` must be empty.
 - For known NN models: search for params / GFLOPs / input size and record them as
   assumptions; the user confirms or picks another.
-- Test with scripted users (the answers in `benchmarks/tasks/*.md`) so it runs unattended.
+- Test with scripted users (the answers in `benchmarks/tasks/*.json`) so it runs unattended.
 
 **Exit:** valid spec for all 10 benchmark tasks with scripted answers; average ≤ 2 rounds.
 
@@ -274,6 +284,10 @@ A quick sanity check of a costed TDG without a partitioner (not a replacement fo
 - Run all 10 tasks × 3 models × 3 repeats → choose the default model; record it in `decisions.md`.
 
 **Exit:** a results table in this folder; default model chosen.
+
+**Status (2026-11-07):** harness done (`benchmarks/`, `hwsw bench`, `hwsw rescore`); gpt-oss:120b
+runs in `benchmarks/results/`: 10/10 valid TDGs, 40/40 spec checks, total ops within 2x on 7/10,
+about 1.1 question rounds and 9 minutes per task. Other models and the 3 repeats are not run yet.
 
 ### Phase 8: Integration and handoff (week 8–9, both tracks)
 - `hwsw run "<task>"`: A → B → C → validate → bounds in one command, resumable from any

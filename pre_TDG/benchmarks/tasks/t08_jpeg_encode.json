@@ -1,0 +1,110 @@
+{
+  "id": "t08_jpeg_encode",
+  "title": "JPEG encoding of 1080p frames",
+  "task": "JPEG-encode 1080p camera frames at 30 fps on a ZCU104 (baseline JPEG, 4:2:0).",
+  "answers": [
+    {
+      "keywords": [
+        "quality",
+        "quantiz"
+      ],
+      "answer": "quality 85, standard tables"
+    },
+    {
+      "keywords": [
+        "subsampl",
+        "chroma",
+        "4:2"
+      ],
+      "answer": "4:2:0"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness"
+      ],
+      "answer": "soft"
+    },
+    {
+      "keywords": [
+        "data type",
+        "precision",
+        "dtype",
+        "bit"
+      ],
+      "answer": "uint8 pixels, int16 coefficients"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "zcu104"
+    }
+  ],
+  "expected": {
+    "platform": "zcu104",
+    "arrival_kind": "streaming",
+    "hardness": "soft",
+    "deadline_s": 0.03333333333333333
+  },
+  "roles": {
+    "n1": [
+      "capture",
+      "camera",
+      "acquire",
+      "read",
+      "input"
+    ],
+    "n2": [
+      "ycbcr",
+      "color",
+      "colour",
+      "convert",
+      "yuv"
+    ],
+    "n3": [
+      "subsampl",
+      "chroma",
+      "downsampl",
+      "420"
+    ],
+    "n4": [
+      "dct",
+      "transform",
+      "cosine"
+    ],
+    "n5": [
+      "quantiz",
+      "quantis",
+      "scale"
+    ],
+    "n6": [
+      "entropy",
+      "huffman",
+      "zigzag",
+      "rle",
+      "run",
+      "encode",
+      "coding"
+    ],
+    "n7": [
+      "write",
+      "output",
+      "save",
+      "file",
+      "store"
+    ]
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "id": "t01_object_detection",
+  "title": "Object detection, 720p @ 30 fps",
+  "task": "Real-time object detection on a 720p camera stream at 30 fps on a ZCU104.",
+  "answers": [
+    {
+      "keywords": [
+        "model input",
+        "input size",
+        "network input",
+        "input resolution"
+      ],
+      "answer": "640x640"
+    },
+    {
+      "keywords": [
+        "data type",
+        "precision",
+        "dtype",
+        "quantiz",
+        "bit"
+      ],
+      "answer": "int8"
+    },
+    {
+      "keywords": [
+        "class"
+      ],
+      "answer": "80 (COCO)"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness"
+      ],
+      "answer": "hard"
+    },
+    {
+      "keywords": [
+        "model",
+        "network",
+        "detector",
+        "architecture"
+      ],
+      "answer": "YOLOv8n"
+    },
+    {
+      "keywords": [
+        "resolution",
+        "frame size",
+        "camera"
+      ],
+      "answer": "1280x720"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "zcu104"
+    }
+  ],
+  "expected": {
+    "platform": "zcu104",
+    "arrival_kind": "streaming",
+    "hardness": "hard",
+    "deadline_s": 0.03333333333333333
+  },
+  "roles": {
+    "n1": [
+      "capture",
+      "camera",
+      "acquire",
+      "grab",
+      "read"
+    ],
+    "n2": [
+      "resize",
+      "letterbox",
+      "scale",
+      "preprocess"
+    ],
+    "n3": [
+      "normalize",
+      "normalise",
+      "quantize",
+      "scale",
+      "preprocess"
+    ],
+    "n4": [
+      "weight",
+      "load",
+      "model"
+    ],
+    "n5": [
+      "stem",
+      "backbone",
+      "conv",
+      "stage"
+    ],
+    "n6": [
+      "backbone",
+      "stage",
+      "conv",
+      "block"
+    ],
+    "n7": [
+      "backbone",
+      "stage",
+      "conv",
+      "block"
+    ],
+    "n8": [
+      "backbone",
+      "stage",
+      "conv",
+      "block"
+    ],
+    "n9": [
+      "neck",
+      "fpn",
+      "pan",
+      "feature",
+      "conv"
+    ],
+    "n10": [
+      "head",
+      "detect",
+      "predict",
+      "conv"
+    ],
+    "n11": [
+      "decode",
+      "box",
+      "score",
+      "threshold",
+      "postprocess",
+      "post"
+    ],
+    "n12": [
+      "nms",
+      "suppression",
+      "non",
+      "postprocess",
+      "filter"
+    ],
+    "n13": [
+      "output",
+      "publish",
+      "draw",
+      "display",
+      "send",
+      "write"
+    ]
+  }
+}

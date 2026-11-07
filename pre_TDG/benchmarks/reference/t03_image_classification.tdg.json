@@ -1,0 +1,352 @@
+{
+  "graph": {
+    "id": "t03_image_classification",
+    "schema_version": "0.2",
+    "provenance": {
+      "kind": "manual",
+      "source": "benchmark reference: Image classification (MobileNetV2), one-shot"
+    }
+  },
+  "arrival": {
+    "kind": "one_shot"
+  },
+  "objective": {
+    "latency": 1.0
+  },
+  "platform": "pynq_z2",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "load_image",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.005,
+        "source": "library_default"
+      }
+    },
+    {
+      "id": "n2",
+      "name": "resize_normalize",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "image": {
+            "shape": [
+              480,
+              640,
+              3
+            ],
+            "dtype": "uint8",
+            "dir": "in"
+          },
+          "tensor": {
+            "shape": [
+              224,
+              224,
+              3
+            ],
+            "dtype": "int8",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "y",
+            "range": 224
+          },
+          {
+            "var": "x",
+            "range": 224
+          },
+          {
+            "var": "c",
+            "range": 3
+          }
+        ],
+        "body": {
+          "mac": 4,
+          "add": 1
+        },
+        "access": {
+          "image": {
+            "pattern": "sliding_window",
+            "reuse": [
+              "x"
+            ]
+          }
+        },
+        "hints": {
+          "unrollable": [
+            "c"
+          ]
+        }
+      },
+      "ops_claimed": 752640,
+      "ops_unit": "ops"
+    },
+    {
+      "id": "n3",
+      "name": "stem_conv",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "conv2d",
+        "params": {
+          "H": 224,
+          "W": 224,
+          "C_in": 3,
+          "C_out": 32,
+          "K": 3,
+          "stride": 2,
+          "padding": 1,
+          "dtype": "int8"
+        }
+      }
+    },
+    {
+      "id": "n4",
+      "name": "blocks_112",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "conv2d",
+        "params": {
+          "H": 112,
+          "W": 112,
+          "C_in": 32,
+          "C_out": 96,
+          "K": 3,
+          "stride": 2,
+          "padding": 1,
+          "dtype": "int8"
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "blocks_56",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "conv2d",
+        "params": {
+          "H": 56,
+          "W": 56,
+          "C_in": 96,
+          "C_out": 144,
+          "K": 3,
+          "stride": 2,
+          "padding": 1,
+          "dtype": "int8"
+        }
+      }
+    },
+    {
+      "id": "n6",
+      "name": "blocks_28",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "conv2d",
+        "params": {
+          "H": 28,
+          "W": 28,
+          "C_in": 144,
+          "C_out": 192,
+          "K": 3,
+          "stride": 2,
+          "padding": 1,
+          "dtype": "int8"
+        }
+      }
+    },
+    {
+      "id": "n7",
+      "name": "blocks_14",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "conv2d",
+        "params": {
+          "H": 14,
+          "W": 14,
+          "C_in": 192,
+          "C_out": 320,
+          "K": 3,
+          "stride": 2,
+          "padding": 1,
+          "dtype": "int8"
+        }
+      }
+    },
+    {
+      "id": "n8",
+      "name": "head_conv",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "conv2d",
+        "params": {
+          "H": 7,
+          "W": 7,
+          "C_in": 320,
+          "C_out": 1280,
+          "K": 1,
+          "stride": 1,
+          "padding": 0,
+          "dtype": "int8"
+        }
+      }
+    },
+    {
+      "id": "n9",
+      "name": "global_avg_pool",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "pool",
+        "params": {
+          "H": 7,
+          "W": 7,
+          "C": 1280,
+          "K": 7,
+          "stride": 7,
+          "mode": "avg",
+          "dtype": "int8"
+        }
+      }
+    },
+    {
+      "id": "n10",
+      "name": "classifier_fc",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "gemm",
+        "params": {
+          "M": 1,
+          "N": 1000,
+          "K": 1280,
+          "dtype": "int8"
+        }
+      }
+    },
+    {
+      "id": "n11",
+      "name": "top1",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "reduce",
+        "params": {
+          "elements": 1000,
+          "mode": "max",
+          "dtype": "int8"
+        }
+      }
+    },
+    {
+      "id": "n12",
+      "name": "report_label",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.0001,
+        "source": "library_default"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "src": "n1",
+      "dst": "n2",
+      "kind": "data",
+      "bytes": 921600
+    },
+    {
+      "id": "e2",
+      "src": "n2",
+      "dst": "n3",
+      "kind": "data",
+      "bytes": 150528
+    },
+    {
+      "id": "e3",
+      "src": "n3",
+      "dst": "n4",
+      "kind": "data",
+      "bytes": 401408
+    },
+    {
+      "id": "e4",
+      "src": "n4",
+      "dst": "n5",
+      "kind": "data",
+      "bytes": 301056
+    },
+    {
+      "id": "e5",
+      "src": "n5",
+      "dst": "n6",
+      "kind": "data",
+      "bytes": 112896
+    },
+    {
+      "id": "e6",
+      "src": "n6",
+      "dst": "n7",
+      "kind": "data",
+      "bytes": 37632
+    },
+    {
+      "id": "e7",
+      "src": "n7",
+      "dst": "n8",
+      "kind": "data",
+      "bytes": 15680
+    },
+    {
+      "id": "e8",
+      "src": "n8",
+      "dst": "n9",
+      "kind": "data",
+      "bytes": 62720
+    },
+    {
+      "id": "e9",
+      "src": "n9",
+      "dst": "n10",
+      "kind": "data",
+      "bytes": 1280
+    },
+    {
+      "id": "e10",
+      "src": "n10",
+      "dst": "n11",
+      "kind": "data",
+      "bytes": 1000
+    },
+    {
+      "id": "e11",
+      "src": "n11",
+      "dst": "n12",
+      "kind": "data",
+      "bytes": 1
+    }
+  ]
+}

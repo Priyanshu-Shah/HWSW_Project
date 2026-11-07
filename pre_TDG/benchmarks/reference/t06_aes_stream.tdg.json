@@ -1,0 +1,189 @@
+{
+  "graph": {
+    "id": "t06_aes_stream",
+    "schema_version": "0.2",
+    "provenance": {
+      "kind": "manual",
+      "source": "benchmark reference: AES-128 encryption of a 1 Gb/s stream"
+    }
+  },
+  "arrival": {
+    "kind": "streaming",
+    "period_s": 0.008388608
+  },
+  "objective": {
+    "latency": 1.0
+  },
+  "platform": "kv260",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "key_expansion",
+      "phase": "setup",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "key": {
+            "shape": [
+              16
+            ],
+            "dtype": "uint8",
+            "dir": "in"
+          },
+          "round_keys": {
+            "shape": [
+              11,
+              16
+            ],
+            "dtype": "uint8",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "word",
+            "range": 44
+          }
+        ],
+        "body": {
+          "logic": 4,
+          "shift": 1
+        }
+      },
+      "ops_claimed": 220,
+      "ops_unit": "ops"
+    },
+    {
+      "id": "n2",
+      "name": "receive_chunk",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.0005,
+        "source": "library_default"
+      }
+    },
+    {
+      "id": "n3",
+      "name": "aes_ctr_encrypt",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "plaintext": {
+            "shape": [
+              65536,
+              16
+            ],
+            "dtype": "uint8",
+            "dir": "in"
+          },
+          "round_keys": {
+            "shape": [
+              11,
+              16
+            ],
+            "dtype": "uint8",
+            "dir": "in",
+            "const": true
+          },
+          "sbox": {
+            "shape": [
+              256
+            ],
+            "dtype": "uint8",
+            "dir": "in",
+            "const": true
+          },
+          "ciphertext": {
+            "shape": [
+              65536,
+              16
+            ],
+            "dtype": "uint8",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "block",
+            "range": 65536
+          },
+          {
+            "var": "round",
+            "range": 10
+          },
+          {
+            "var": "byte",
+            "range": 16
+          }
+        ],
+        "body": {
+          "logic": 4,
+          "shift": 1
+        },
+        "access": {
+          "plaintext": {
+            "pattern": "streaming"
+          },
+          "round_keys": {
+            "pattern": "reuse",
+            "reuse": [
+              "block"
+            ]
+          },
+          "sbox": {
+            "pattern": "random"
+          }
+        },
+        "hints": {
+          "unrollable": [
+            "byte"
+          ]
+        }
+      },
+      "ops_claimed": 52428800,
+      "ops_unit": "ops"
+    },
+    {
+      "id": "n4",
+      "name": "send_chunk",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.0005,
+        "source": "library_default"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "src": "n1",
+      "dst": "n3",
+      "kind": "data",
+      "bytes": 176
+    },
+    {
+      "id": "e2",
+      "src": "n2",
+      "dst": "n3",
+      "kind": "data",
+      "bytes": 1048576
+    },
+    {
+      "id": "e3",
+      "src": "n3",
+      "dst": "n4",
+      "kind": "data",
+      "bytes": 1048576
+    }
+  ],
+  "constraints": {
+    "deadline_s": 0.008388608
+  }
+}

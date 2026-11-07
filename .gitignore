@@ -6,3 +6,6 @@ __pycache__/
 
 # Run outputs (pre_TDG/runs/<timestamp>_<graph_id>/)
 runs/
+
+# Cached web search results and pages (pre_TDG/.cache/)
+.cache/

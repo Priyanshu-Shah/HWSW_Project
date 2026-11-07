@@ -1,11 +1,30 @@
-"""Command line: `hwsw validate | cost | bounds` (clarify, build, run come with the LLM stages)."""
+"""Command line: `hwsw validate | cost | bounds | clarify | build | run | bench | rescore`."""
 
+from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
 import typer
 from rich.console import Console
+from rich.prompt import Prompt
 
+from hwsw.benchmarks import (
+    list_task_ids,
+    load_task,
+    ollama_failed,
+    rescore,
+    results_table,
+    run_task,
+)
+from hwsw.conversation import (
+    AgentError,
+    AssistantMessage,
+    AssumptionsNotice,
+    ConversationAgent,
+    QuestionBatch,
+    UserInput,
+)
 from hwsw.custom_hls import (
     CostEstimationError,
     compute_latency_bounds,
@@ -13,8 +32,19 @@ from hwsw.custom_hls import (
     load_constants,
 )
 from hwsw.json_files import read_json, write_json
-from hwsw.platforms import BoardNotFoundError, load_board
-from hwsw.repo_paths import LIBRARY_BOARDS_DIR
+from hwsw.llm import (
+    ClarificationAgent,
+    LlmError,
+    LlmSettings,
+    OllamaClient,
+    PipelineAgent,
+    RunLog,
+    TdgBuilder,
+    new_run_dir,
+)
+from hwsw.llm.run_log import LOG_FILE_NAME
+from hwsw.platforms import BoardNotFoundError, list_board_ids, load_board
+from hwsw.repo_paths import BENCHMARKS_DIR, LIBRARY_BOARDS_DIR
 from hwsw.validation import ValidationReport, validate_tdg, validate_tdg_file
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help=__doc__)
@@ -84,6 +114,139 @@ def bounds(costed_tdg_file: TdgFile) -> None:
         console.print(f"deadline     : {_milliseconds(result.deadline_s)}")
     for warning in result.warnings:
         console.print(f"[yellow]warning:[/yellow] {warning}")
+
+
+@app.command()
+def clarify(
+    task: Annotated[str, typer.Argument(help="The task in plain English.")],
+    boards_dir: BoardsDir = LIBRARY_BOARDS_DIR,
+) -> None:
+    """Stage A: talk with the LLM until the task spec is complete; writes runs/<time>_spec/."""
+    run_dir = new_run_dir("spec")
+    client = OllamaClient(log=RunLog(run_dir / LOG_FILE_NAME))
+    agent = ClarificationAgent(list_board_ids(boards_dir), client=client, boards_dir=boards_dir)
+    console.print(f"model {client.settings.model}; log {run_dir / LOG_FILE_NAME}")
+    _converse(agent, task, lambda: agent.spec is not None)
+    write_json(run_dir / "spec.json", agent.spec)
+    console.print(f"[green]wrote[/green] {run_dir / 'spec.json'}")
+
+
+@app.command()
+def build(
+    spec_file: Annotated[Path, typer.Argument(exists=True, dir_okay=False, help="spec.json")],
+    boards_dir: BoardsDir = LIBRARY_BOARDS_DIR,
+) -> None:
+    """Stage B: spec -> graph-only TDG, written as tdg.json next to the spec."""
+    spec = read_json(spec_file)
+    board = _load_board_or_exit(spec["platform"], boards_dir)
+    client = OllamaClient(log=RunLog(spec_file.parent / LOG_FILE_NAME))
+    try:
+        with console.status("building the graph..."):
+            result = TdgBuilder(client, board).build(spec)
+    except LlmError as failure:
+        console.print(f"[red]{failure}[/red]")
+        raise typer.Exit(code=1) from failure
+    for warning in result.warnings:
+        console.print(f"[yellow]warning:[/yellow] {warning}")
+    out = spec_file.with_name("tdg.json")
+    write_json(out, result.tdg)
+    console.print(f"[green]wrote[/green] {out} ({len(result.tdg['nodes'])} nodes)")
+
+
+@app.command()
+def run(
+    task: Annotated[str, typer.Argument(help="The task in plain English.")],
+    boards_dir: BoardsDir = LIBRARY_BOARDS_DIR,
+) -> None:
+    """The whole pipeline: questions -> spec -> TDG -> costs -> bounds, in runs/<time>_run/."""
+    agent = PipelineAgent(
+        list_board_ids(boards_dir), boards_dir=boards_dir, run_dir=new_run_dir("run")
+    )
+    console.print(f"run folder {agent.run_dir}")
+    _converse(agent, task, lambda: agent.tdg is not None)
+    console.print(f"[green]wrote[/green] {agent.run_dir / 'spec.json'}, tdg.json")
+    tdg_file = agent.run_dir / "tdg.json"
+    cost(tdg_file, out=None, boards_dir=boards_dir, constants_file=None)
+    bounds(tdg_file.with_name("tdg.costed.json"))
+
+
+@app.command()
+def bench(
+    tasks: Annotated[
+        list[str] | None, typer.Argument(help="Task ids or prefixes (e.g. t02); default: all.")
+    ] = None,
+    boards_dir: BoardsDir = LIBRARY_BOARDS_DIR,
+    model: Annotated[str | None, typer.Option(help="Ollama model (default: D2's).")] = None,
+    think: Annotated[str, typer.Option(help="Reasoning effort: low | medium | high.")] = "medium",
+    repeats: Annotated[int, typer.Option(min=1)] = 1,
+) -> None:
+    """Run benchmark tasks with a scripted user; writes benchmarks/results/<time>_<model>.md."""
+    settings = LlmSettings.from_environment()
+    settings = LlmSettings(host=settings.host, model=model or settings.model, think=think)
+    task_list = [load_task(task_id) for task_id in tasks or list_task_ids()]
+    name = f"{datetime.now():%Y%m%d_%H%M%S}_{settings.model.replace(':', '-')}_{think}"
+    out = BENCHMARKS_DIR / "results" / name
+    results = []
+    for _ in range(repeats):
+        for task in task_list:
+            console.print(f"{task.id} ({settings.model}, think {think}) ...")
+            result = run_task(task, boards_dir, settings)
+            results.append(result)
+            write_json(out.with_suffix(".json"), results)  # saved after every task
+            out.with_suffix(".md").write_text(results_table(results), encoding="utf-8")
+            console.print(f"  {result['minutes']} min; error: {result['error']}")
+            if ollama_failed(result):
+                console.print("[red]Ollama failed; stopping (see decisions.md D2).[/red]")
+                raise typer.Exit(code=1)
+    console.print(results_table(results))
+    console.print(f"[green]wrote[/green] {out}.md and .json")
+
+
+@app.command(name="rescore")
+def rescore_command(
+    results_file: Annotated[
+        Path, typer.Argument(exists=True, dir_okay=False, help="benchmarks/results/<run>.json")
+    ],
+    boards_dir: BoardsDir = LIBRARY_BOARDS_DIR,
+) -> None:
+    """Score a benchmark run again from its saved files (after a scoring change); no LLM."""
+    results = rescore(read_json(results_file), boards_dir)
+    write_json(results_file, results)
+    results_file.with_suffix(".md").write_text(results_table(results), encoding="utf-8")
+    console.print(results_table(results))
+
+
+def _converse(agent: ConversationAgent, task: str, is_done: Callable[[], bool]) -> None:
+    """Shows the agent's events as they come and asks its questions in the terminal."""
+    user_input = UserInput(text=task)
+    while not is_done():
+        batch = None
+        with console.status("thinking..."):
+            for event in agent.handle(user_input):
+                if isinstance(event, AssistantMessage):
+                    console.print(event.text)
+                elif isinstance(event, AssumptionsNotice):
+                    for item in event.assumptions:
+                        url = f" <{item.url}>" if item.url else ""
+                        console.print(f"  {item.key} = {item.value} [{item.source}]{url}")
+                elif isinstance(event, QuestionBatch):
+                    batch = event
+                elif isinstance(event, AgentError):
+                    console.print(f"[red]{event.message}[/red]")
+                    raise typer.Exit(code=1)
+        user_input = UserInput(answers=_ask_in_terminal(batch)) if batch else UserInput()
+
+
+def _ask_in_terminal(batch: QuestionBatch) -> dict[str, str]:
+    return {
+        question.id: Prompt.ask(
+            question.text,
+            console=console,
+            default=question.suggested_answer,
+            choices=question.choices or None,
+        )
+        for question in batch.questions
+    }
 
 
 def _load_board_or_exit(board_id: str, boards_dir: Path):

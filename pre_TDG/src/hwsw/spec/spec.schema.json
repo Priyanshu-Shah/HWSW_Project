@@ -55,6 +55,20 @@
         "then": {"required": ["url"], "properties": {"url": {"minLength": 1}}}
       }
     },
+    "networks": {
+      "description": "Known neural networks in the task and their size, so the TDG builder can check that its nodes for each network add up to it. Optional.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "gmacs"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "gmacs": {"description": "Multiply-accumulates per inference, in billions.", "type": "number", "exclusiveMinimum": 0},
+          "input": {"description": "Input size, e.g. '640x640x3'.", "type": "string"}
+        }
+      }
+    },
     "open_questions": {
       "description": "Questions still unanswered. Must be empty before the TDG builder runs.",
       "type": "array",

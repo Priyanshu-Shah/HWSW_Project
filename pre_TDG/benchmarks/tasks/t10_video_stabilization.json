@@ -1,0 +1,144 @@
+{
+  "id": "t10_video_stabilization",
+  "title": "Video stabilization, 720p @ 30 fps",
+  "task": "Stabilize a shaky 720p camera stream at 30 fps on a ZCU104: track features between frames, estimate the camera motion, smooth it and warp each frame.",
+  "answers": [
+    {
+      "keywords": [
+        "feature",
+        "corner",
+        "keypoint",
+        "points"
+      ],
+      "answer": "200 corners (Harris), tracked with Lucas-Kanade"
+    },
+    {
+      "keywords": [
+        "motion model",
+        "transform",
+        "affine",
+        "homography"
+      ],
+      "answer": "affine, estimated with RANSAC"
+    },
+    {
+      "keywords": [
+        "smooth",
+        "window",
+        "trajectory"
+      ],
+      "answer": "moving average over 30 frames"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness"
+      ],
+      "answer": "soft"
+    },
+    {
+      "keywords": [
+        "data type",
+        "precision",
+        "dtype",
+        "bit"
+      ],
+      "answer": "uint8 pixels"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "zcu104"
+    }
+  ],
+  "expected": {
+    "platform": "zcu104",
+    "arrival_kind": "streaming",
+    "hardness": "soft",
+    "deadline_s": 0.03333333333333333
+  },
+  "roles": {
+    "n1": [
+      "capture",
+      "camera",
+      "acquire",
+      "read",
+      "input"
+    ],
+    "n2": [
+      "gray",
+      "grey",
+      "luma",
+      "convert"
+    ],
+    "n3": [
+      "blur",
+      "gaussian",
+      "smooth",
+      "filter",
+      "denoise",
+      "pyramid"
+    ],
+    "n4": [
+      "corner",
+      "feature",
+      "harris",
+      "detect",
+      "keypoint",
+      "fast",
+      "shi"
+    ],
+    "n5": [
+      "track",
+      "optical",
+      "flow",
+      "lucas",
+      "kanade",
+      "match",
+      "lk"
+    ],
+    "n6": [
+      "motion",
+      "estimate",
+      "ransac",
+      "affine",
+      "transform",
+      "homography"
+    ],
+    "n7": [
+      "smooth",
+      "trajectory",
+      "filter",
+      "average",
+      "path"
+    ],
+    "n8": [
+      "warp",
+      "transform",
+      "affine",
+      "remap",
+      "stabiliz",
+      "apply"
+    ],
+    "n9": [
+      "output",
+      "write",
+      "display",
+      "encode",
+      "send"
+    ]
+  }
+}

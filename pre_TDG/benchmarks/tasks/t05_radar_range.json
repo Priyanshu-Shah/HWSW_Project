@@ -1,0 +1,110 @@
+{
+  "id": "t05_radar_range",
+  "title": "FFT-based radar range processing",
+  "task": "FMCW radar range processing on a ZCU104: each frame has 256 chirps of 512 ADC samples, 20 frames per second. Range FFT per chirp, then CFAR detection of targets.",
+  "answers": [
+    {
+      "keywords": [
+        "data type",
+        "precision",
+        "dtype",
+        "bit",
+        "adc"
+      ],
+      "answer": "int16 samples, int32 FFT output"
+    },
+    {
+      "keywords": [
+        "window"
+      ],
+      "answer": "Hann window"
+    },
+    {
+      "keywords": [
+        "cfar",
+        "detection",
+        "guard",
+        "training"
+      ],
+      "answer": "CA-CFAR, 32 training cells"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness"
+      ],
+      "answer": "hard"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "zcu104"
+    }
+  ],
+  "expected": {
+    "platform": "zcu104",
+    "arrival_kind": "streaming",
+    "hardness": "hard",
+    "deadline_s": 0.05
+  },
+  "roles": {
+    "n1": [
+      "adc",
+      "capture",
+      "acquire",
+      "read",
+      "input"
+    ],
+    "n2": [
+      "window",
+      "hann",
+      "hamming",
+      "taper"
+    ],
+    "n3": [
+      "fft",
+      "range",
+      "fourier",
+      "spectrum"
+    ],
+    "n4": [
+      "magnitude",
+      "abs",
+      "power",
+      "modulus"
+    ],
+    "n5": [
+      "integrat",
+      "sum",
+      "average",
+      "accumulate",
+      "combine"
+    ],
+    "n6": [
+      "cfar",
+      "detect",
+      "threshold",
+      "peak"
+    ],
+    "n7": [
+      "report",
+      "output",
+      "send",
+      "publish",
+      "write"
+    ]
+  }
+}

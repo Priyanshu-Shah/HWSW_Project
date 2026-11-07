@@ -1,0 +1,94 @@
+{
+  "id": "t04_fir_audio",
+  "title": "FIR filter on audio, 48 kHz",
+  "task": "Apply a 256-tap FIR low-pass filter to a mono 48 kHz audio stream on a PYNQ-Z2, processing it in 10 ms blocks.",
+  "answers": [
+    {
+      "keywords": [
+        "data type",
+        "precision",
+        "dtype",
+        "bit",
+        "sample format"
+      ],
+      "answer": "int16"
+    },
+    {
+      "keywords": [
+        "block",
+        "buffer",
+        "frame size",
+        "samples per"
+      ],
+      "answer": "480 samples (10 ms)"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness"
+      ],
+      "answer": "hard"
+    },
+    {
+      "keywords": [
+        "channel",
+        "mono",
+        "stereo"
+      ],
+      "answer": "1 (mono)"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "pynq_z2"
+    }
+  ],
+  "expected": {
+    "platform": "pynq_z2",
+    "arrival_kind": "streaming",
+    "hardness": "hard",
+    "deadline_s": 0.01
+  },
+  "roles": {
+    "n1": [
+      "read",
+      "capture",
+      "input",
+      "acquire",
+      "receive"
+    ],
+    "n2": [
+      "fir",
+      "filter",
+      "convolution",
+      "lowpass",
+      "low"
+    ],
+    "n3": [
+      "gain",
+      "clip",
+      "saturate",
+      "scale",
+      "volume"
+    ],
+    "n4": [
+      "write",
+      "output",
+      "play",
+      "send"
+    ]
+  }
+}

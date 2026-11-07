@@ -94,7 +94,7 @@ export class ChatPanel {
     const card = el("form", { class: "card" },
       el("h3", {}, "A few questions"),
       ...fields.map(({ question, control }) =>
-        el("label", {}, el("span", {}, question.text), control)),
+        el("label", {}, el("span", {}, question.text), control, choiceList(question, control))),
       submit,
     );
     card.addEventListener("submit", (event) => {
@@ -135,12 +135,21 @@ export class ChatPanel {
   }
 }
 
+let choiceListCount = 0;
+
+// A text box pre-filled with the suggestion. Choices are only offered: the agent's list can miss
+// what the user wants (e.g. a newer model), so any other answer can be typed.
 function answerControl(question) {
-  const control = question.choices.length
-    ? el("select", {}, ...question.choices.map((choice) => el("option", { value: choice }, choice)))
-    : el("input", { type: "text" });
+  const control = el("input", { type: "text" });
   control.value = question.suggested_answer;
   return control;
+}
+
+function choiceList(question, control) {
+  if (!question.choices.length) return [];
+  const id = `choices-${++choiceListCount}`;
+  control.setAttribute("list", id);
+  return el("datalist", { id }, ...question.choices.map((choice) => el("option", { value: choice })));
 }
 
 function sourceCell(item) {
