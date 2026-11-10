@@ -1,0 +1,15 @@
+{
+  "schema_version": "0.1.0",
+  "id": "toy_cpu_fpga",
+  "name": "Toy CPU + FPGA (synthetic)",
+  "description": "Minimal platform with round numbers so schedules can be checked by hand. Not a real device.",
+  "provenance": {"kind": "synthetic", "source": "hand-written for unit tests"},
+  "pes": [
+    {"id": "cpu0", "type": "cpu.generic", "kind": "cpu", "concurrency": "exclusive"},
+    {"id": "fpga0", "type": "fpga.generic", "kind": "fpga", "concurrency": "spatial", "capacity": {"LUT": 1000}}
+  ],
+  "interfaces": [
+    {"id": "bus0", "kind": "bus", "connects": ["cpu0", "fpga0"], "setup_us": 0, "bandwidth_mb_s": 1.0, "shared": true}
+  ],
+  "budgets": {}
+}

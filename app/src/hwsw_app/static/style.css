@@ -14,6 +14,8 @@
   --node-hw: #f6c8a0;
   --node-any: #bfe3c9;
   --node-border: #5b6678;
+  --node-sw-strong: #3d5a8a;
+  --node-hw-strong: #c0631a;
   --edge: #8a94a6;
 }
 
@@ -33,6 +35,8 @@
     --node-hw: #8a5a2e;
     --node-any: #2f6a46;
     --node-border: #9aa4b5;
+    --node-sw-strong: #8fb0e8;
+    --node-hw-strong: #f0a35e;
     --edge: #7c879a;
   }
 }
@@ -193,6 +197,19 @@ button.link {
   border-radius: 8px;
 }
 #bounds.warn { border-color: var(--warning); }
+#partition {
+  margin: 0 12px 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--ok);
+  border-radius: 6px;
+  background: var(--panel);
+  font-size: 13px;
+}
+#partition.warn { border-left-color: var(--warning); }
+#partition p { margin: 2px 0; }
+.swatch.on-sw { background: var(--node-sw); border: 2px solid var(--node-sw-strong); }
+.swatch.on-hw { background: var(--node-hw); border: 2px solid var(--node-hw-strong); }
 #bounds ul { margin: 4px 0 0; padding-left: 18px; color: var(--warning); }
 
 #tabs { display: flex; gap: 4px; padding: 0 12px; border-bottom: 1px solid var(--border); }
@@ -208,7 +225,7 @@ button.link {
   position: absolute; inset: 0; display: grid; place-items: center;
   color: var(--muted); text-align: center; padding: 24px; pointer-events: none;
 }
-#legend { display: flex; gap: 16px; padding: 6px 12px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+#legend, #legend-partition { display: flex; gap: 16px; padding: 6px 12px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
 .swatch { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; border: 1px solid var(--node-border); border-radius: 3px; }
 .swatch.sw { background: var(--node-sw); }
 .swatch.hw { background: var(--node-hw); }

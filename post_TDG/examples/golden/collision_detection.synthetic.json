@@ -1,0 +1,67 @@
+{
+  "schema_version": "0.1.0",
+  "id": "collision_detection",
+  "name": "Collision detection, 720p @ 30 fps, < 50 ms (synthetic costs)",
+  "description": "capture -> preprocess -> {detect, flow} -> track -> ttc on a Zynq-7020-class board. Detect, flow and preprocess all fit the LUT budget together but not the DSP budget.",
+  "provenance": {
+    "kind": "synthetic",
+    "source": "hand-written golden example",
+    "notes": "Every cost is an order-of-magnitude placeholder chosen to exercise the solver, NOT a measurement. Replace with Bind output once the estimator exists."
+  },
+  "workload": {"width": 1280, "height": 720, "fps": 30, "det_input": 320, "max_objects": 16},
+  "arrival": {"kind": "streaming", "period_ms": "1000 / fps"},
+  "constraints": {"deadline_ms": 50},
+  "objective": {"weights": {"latency": 1.0}},
+  "platform": {"id": "zynq7020_class", "path": "../../platforms/zynq7020_class.synthetic.json"},
+  "nodes": [
+    {"id": "capture", "name": "Camera capture", "pinned_pe": "cpu0", "implementations": [
+      {"id": "sw", "pe_type": "cpu.cortex_a9",
+       "cost": {"time_ms": "0.5 + 1.0e-6 * width * height", "power_mw": 400,
+                "resources": {"mem_bytes": "2 * width * height"}}}
+    ]},
+    {"id": "preprocess", "name": "Grayscale + resize + Gaussian blur", "implementations": [
+      {"id": "sw", "pe_type": "cpu.cortex_a9",
+       "cost": {"time_ms": {"expr": "9.0e-6 * width * height", "unc": [0.8, 1.3]}, "power_mw": 900,
+                "resources": {"mem_bytes": "2 * width * height"}}},
+      {"id": "hw", "pe_type": "fpga.xc7z020",
+       "cost": {"time_ms": {"expr": "2.5e-6 * width * height", "unc": [0.9, 1.2]}, "power_mw": 250,
+                "resources": {"LUT": {"expr": 4200, "unc": [0.9, 1.3]}, "FF": {"expr": 5100, "unc": [0.9, 1.3]},
+                              "DSP": 12, "BRAM18K": 8}}}
+    ]},
+    {"id": "detect", "name": "CNN object detector", "implementations": [
+      {"id": "sw", "pe_type": "cpu.cortex_a9",
+       "cost": {"time_ms": {"expr": "3.5e-3 * det_input ** 2", "unc": [0.85, 1.25]}, "power_mw": 1000,
+                "resources": {"mem_bytes": 25000000}}},
+      {"id": "hw", "pe_type": "fpga.xc7z020",
+       "cost": {"time_ms": {"expr": "1.6e-4 * det_input ** 2", "unc": [0.85, 1.25]}, "power_mw": 1500,
+                "resources": {"LUT": {"expr": 38000, "unc": [0.9, 1.35]}, "FF": {"expr": 52000, "unc": [0.9, 1.3]},
+                              "DSP": 180, "BRAM18K": 200}}}
+    ]},
+    {"id": "flow", "name": "Sparse optical flow", "implementations": [
+      {"id": "sw", "pe_type": "cpu.cortex_a9",
+       "cost": {"time_ms": {"expr": "6.0e-6 * width * height", "unc": [0.8, 1.3]}, "power_mw": 900,
+                "resources": {"mem_bytes": "width * height"}}},
+      {"id": "hw", "pe_type": "fpga.xc7z020",
+       "cost": {"time_ms": {"expr": "1.8e-6 * width * height", "unc": [0.9, 1.2]}, "power_mw": 400,
+                "resources": {"LUT": {"expr": 9800, "unc": [0.9, 1.3]}, "FF": {"expr": 12000, "unc": [0.9, 1.3]},
+                              "DSP": 36, "BRAM18K": 36}}}
+    ]},
+    {"id": "track", "name": "Multi-object tracker (Kalman)", "implementations": [
+      {"id": "sw", "pe_type": "cpu.cortex_a9",
+       "cost": {"time_ms": {"expr": "0.4 + 0.15 * max_objects", "unc": [0.8, 1.5]}, "power_mw": 800}}
+    ]},
+    {"id": "ttc", "name": "Time to collision", "implementations": [
+      {"id": "sw", "pe_type": "cpu.cortex_a9",
+       "cost": {"time_ms": {"expr": "0.2 + 0.05 * max_objects", "unc": [0.8, 1.5]}, "power_mw": 700}}
+    ]}
+  ],
+  "edges": [
+    {"src": "capture", "dst": "preprocess", "bytes": "2 * width * height", "name": "YUV422 frame"},
+    {"src": "preprocess", "dst": "detect", "bytes": "3 * det_input * det_input", "name": "detector input"},
+    {"src": "preprocess", "dst": "flow", "bytes": "width * height / 4", "name": "half-res gray"},
+    {"src": "detect", "dst": "track", "bytes": "64 * max_objects", "name": "boxes"},
+    {"src": "flow", "dst": "track", "bytes": "width * height / 8", "name": "motion vectors"},
+    {"src": "track", "dst": "ttc", "bytes": "32 * max_objects", "name": "tracks"},
+    {"src": "track", "dst": "track", "bytes": "64 * max_objects", "distance": 1, "name": "tracker state (previous frame)"}
+  ]
+}

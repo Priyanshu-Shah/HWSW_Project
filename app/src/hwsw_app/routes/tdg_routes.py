@@ -1,4 +1,4 @@
-"""Boards, example graphs, and the validate / cost / bounds operations on a TDG."""
+"""Boards, example graphs, and the validate / cost / bounds / partition operations on a TDG."""
 
 from typing import Annotated
 
@@ -12,6 +12,7 @@ from hwsw_app.schemas import (
     BoundsOut,
     CostResponse,
     ExamplesResponse,
+    PartitionResponse,
     TdgRequest,
     ValidateResponse,
 )
@@ -55,3 +56,9 @@ def bounds(request: TdgRequest, service: Service) -> BoundsOut:
         return service.bounds(request.tdg)
     except (KeyError, ValueError) as unusable:
         raise HTTPException(status_code=422, detail=f"not a costed TDG: {unusable}") from unusable
+
+
+@router.post("/tdg/partition")
+def partition(request: TdgRequest, service: Service) -> PartitionResponse:
+    """Run the post_TDG partitioner on a costed TDG (a few seconds)."""
+    return service.partition(request.tdg)

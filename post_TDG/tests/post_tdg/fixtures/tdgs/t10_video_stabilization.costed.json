@@ -1,0 +1,1009 @@
+{
+ "graph": {
+  "id": "t10_video_stabilization",
+  "schema_version": "0.2",
+  "provenance": {
+   "kind": "manual",
+   "source": "benchmark reference: Video stabilization, 720p @ 30 fps"
+  }
+ },
+ "arrival": {
+  "kind": "streaming",
+  "period_s": 0.03333333333333333
+ },
+ "objective": {
+  "latency": 1.0
+ },
+ "platform": "zcu104",
+ "nodes": [
+  {
+   "id": "n1",
+   "name": "capture_frame",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 0.002,
+    "source": "library_default"
+   }
+  },
+  {
+   "id": "n2",
+   "name": "to_grayscale",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "rgb": {
+      "shape": [
+       720,
+       1280,
+       3
+      ],
+      "dtype": "uint8",
+      "dir": "in"
+     },
+     "gray": {
+      "shape": [
+       720,
+       1280
+      ],
+      "dtype": "uint8",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "y",
+      "range": 720
+     },
+     {
+      "var": "x",
+      "range": 1280
+     },
+     {
+      "var": "c",
+      "range": 3
+     }
+    ],
+    "body": {
+     "mac": 1
+    },
+    "access": {
+     "rgb": {
+      "pattern": "streaming"
+     }
+    },
+    "hints": {
+     "unrollable": [
+      "c"
+     ]
+    }
+   },
+   "ops_claimed": 2764800,
+   "ops_unit": "macs"
+  },
+  {
+   "id": "n3",
+   "name": "gaussian_blur",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "gray": {
+      "shape": [
+       720,
+       1280
+      ],
+      "dtype": "uint8",
+      "dir": "in"
+     },
+     "blurred": {
+      "shape": [
+       716,
+       1276
+      ],
+      "dtype": "uint8",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "y",
+      "range": 716
+     },
+     {
+      "var": "x",
+      "range": 1276
+     },
+     {
+      "var": "ky",
+      "range": 5
+     },
+     {
+      "var": "kx",
+      "range": 5
+     }
+    ],
+    "body": {
+     "mac": 1
+    },
+    "access": {
+     "gray": {
+      "pattern": "sliding_window",
+      "reuse": [
+       "ky",
+       "kx"
+      ]
+     }
+    },
+    "hints": {
+     "unrollable": [
+      "ky",
+      "kx"
+     ]
+    }
+   },
+   "ops_claimed": 22840400,
+   "ops_unit": "macs"
+  },
+  {
+   "id": "n4",
+   "name": "detect_corners",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "blurred": {
+      "shape": [
+       716,
+       1276
+      ],
+      "dtype": "uint8",
+      "dir": "in"
+     },
+     "corners": {
+      "shape": [
+       200,
+       2
+      ],
+      "dtype": "int32",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "y",
+      "range": 714
+     },
+     {
+      "var": "x",
+      "range": 1274
+     },
+     {
+      "var": "ky",
+      "range": 3
+     },
+     {
+      "var": "kx",
+      "range": 3
+     }
+    ],
+    "body": {
+     "mac": 6,
+     "cmp": 1
+    },
+    "access": {
+     "blurred": {
+      "pattern": "sliding_window",
+      "reuse": [
+       "ky",
+       "kx"
+      ]
+     }
+    },
+    "control": {
+     "branches": 1
+    }
+   },
+   "ops_claimed": 57307068,
+   "ops_unit": "ops"
+  },
+  {
+   "id": "n5",
+   "name": "track_features",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "blurred": {
+      "shape": [
+       716,
+       1276
+      ],
+      "dtype": "uint8",
+      "dir": "in"
+     },
+     "corners": {
+      "shape": [
+       200,
+       2
+      ],
+      "dtype": "int32",
+      "dir": "in"
+     },
+     "flow": {
+      "shape": [
+       200,
+       4
+      ],
+      "dtype": "fp32",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "feature",
+      "range": 200
+     },
+     {
+      "var": "level",
+      "range": 3
+     },
+     {
+      "var": "iteration",
+      "range": 10
+     },
+     {
+      "var": "wy",
+      "range": 21
+     },
+     {
+      "var": "wx",
+      "range": 21
+     }
+    ],
+    "body": {
+     "mac": 6
+    },
+    "access": {
+     "blurred": {
+      "pattern": "random"
+     }
+    },
+    "control": {
+     "branches": 1
+    }
+   },
+   "ops_claimed": 15876000,
+   "ops_unit": "macs"
+  },
+  {
+   "id": "n6",
+   "name": "estimate_motion",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "flow": {
+      "shape": [
+       200,
+       4
+      ],
+      "dtype": "fp32",
+      "dir": "in"
+     },
+     "motion": {
+      "shape": [
+       6
+      ],
+      "dtype": "fp32",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "trial",
+      "range": 500
+     },
+     {
+      "var": "point",
+      "range": 200
+     }
+    ],
+    "body": {
+     "mul": 6,
+     "add": 6,
+     "cmp": 1
+    },
+    "access": {
+     "flow": {
+      "pattern": "random"
+     }
+    },
+    "control": {
+     "branches": 1,
+     "control_heavy": true
+    }
+   },
+   "ops_claimed": 1300000,
+   "ops_unit": "ops"
+  },
+  {
+   "id": "n7",
+   "name": "smooth_trajectory",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "motion": {
+      "shape": [
+       6
+      ],
+      "dtype": "fp32",
+      "dir": "in"
+     },
+     "correction": {
+      "shape": [
+       6
+      ],
+      "dtype": "fp32",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "frame",
+      "range": 30
+     },
+     {
+      "var": "param",
+      "range": 6
+     }
+    ],
+    "body": {
+     "mac": 1
+    }
+   },
+   "ops_claimed": 180,
+   "ops_unit": "macs"
+  },
+  {
+   "id": "n8",
+   "name": "warp_frame",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "frame": {
+      "shape": [
+       720,
+       1280,
+       3
+      ],
+      "dtype": "uint8",
+      "dir": "in"
+     },
+     "correction": {
+      "shape": [
+       6
+      ],
+      "dtype": "fp32",
+      "dir": "in",
+      "const": true
+     },
+     "stable": {
+      "shape": [
+       720,
+       1280,
+       3
+      ],
+      "dtype": "uint8",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "y",
+      "range": 720
+     },
+     {
+      "var": "x",
+      "range": 1280
+     },
+     {
+      "var": "c",
+      "range": 3
+     }
+    ],
+    "body": {
+     "mac": 4,
+     "mul": 4,
+     "add": 2
+    },
+    "access": {
+     "frame": {
+      "pattern": "random"
+     }
+    }
+   },
+   "ops_claimed": 27648000,
+   "ops_unit": "ops"
+  },
+  {
+   "id": "n9",
+   "name": "output_frame",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 0.002,
+    "source": "library_default"
+   }
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "src": "n1",
+   "dst": "n2",
+   "kind": "data",
+   "bytes": 2764800
+  },
+  {
+   "id": "e2",
+   "src": "n2",
+   "dst": "n3",
+   "kind": "data",
+   "bytes": 921600
+  },
+  {
+   "id": "e3",
+   "src": "n3",
+   "dst": "n4",
+   "kind": "data",
+   "bytes": 913616
+  },
+  {
+   "id": "e4",
+   "src": "n3",
+   "dst": "n5",
+   "kind": "data",
+   "bytes": 913616
+  },
+  {
+   "id": "e5",
+   "src": "n4",
+   "dst": "n5",
+   "kind": "data",
+   "bytes": 1600
+  },
+  {
+   "id": "e6",
+   "src": "n5",
+   "dst": "n6",
+   "kind": "data",
+   "bytes": 3200
+  },
+  {
+   "id": "e7",
+   "src": "n6",
+   "dst": "n7",
+   "kind": "data",
+   "bytes": 24
+  },
+  {
+   "id": "e8",
+   "src": "n7",
+   "dst": "n8",
+   "kind": "data",
+   "bytes": 24
+  },
+  {
+   "id": "e9",
+   "src": "n1",
+   "dst": "n8",
+   "kind": "data",
+   "bytes": 2764800
+  },
+  {
+   "id": "e10",
+   "src": "n8",
+   "dst": "n9",
+   "kind": "data",
+   "bytes": 2764800
+  }
+ ],
+ "constraints": {
+  "deadline_s": 0.03333333333333333
+ },
+ "costs": {
+  "nodes": [
+   {
+    "id": "n1",
+    "sw": {
+     "time_s": {
+      "value": 0.002,
+      "lo": 0.001,
+      "hi": 0.003,
+      "source": "library_default"
+     }
+    }
+   },
+   {
+    "id": "n2",
+    "ops_estimated": 2764800,
+    "sw": {
+     "time_s": {
+      "value": 0.00048,
+      "lo": 0.000336,
+      "hi": 0.000624,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 3,
+      "time_s": {
+       "value": 0.0046081,
+       "lo": 0.00322567,
+       "hi": 0.00599053,
+       "source": "roofline"
+      },
+      "ii_s": 0.004608,
+      "resources": {
+       "lut": 1524,
+       "ff": 2286,
+       "dsp": 2,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 12,
+      "time_s": {
+       "value": 0.0018432,
+       "lo": 0.00129024,
+       "hi": 0.00239616,
+       "source": "roofline"
+      },
+      "ii_s": 0.0018432,
+      "resources": {
+       "lut": 1596,
+       "ff": 2394,
+       "dsp": 6,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 48,
+      "time_s": {
+       "value": 0.0018432,
+       "lo": 0.00129024,
+       "hi": 0.00239616,
+       "source": "roofline"
+      },
+      "ii_s": 0.0018432,
+      "resources": {
+       "lut": 1884,
+       "ff": 2826,
+       "dsp": 24,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n3",
+    "ops_estimated": 22840400,
+    "sw": {
+     "time_s": {
+      "value": 0.00396535,
+      "lo": 0.00277574,
+      "hi": 0.00515495,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 25,
+      "time_s": {
+       "value": 0.00456818,
+       "lo": 0.00319773,
+       "hi": 0.00593863,
+       "source": "roofline"
+      },
+      "ii_s": 0.00456808,
+      "resources": {
+       "lut": 1700,
+       "ff": 2550,
+       "dsp": 13,
+       "bram18k": 3
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 100,
+      "time_s": {
+       "value": 0.00114212,
+       "lo": 0.000799484,
+       "hi": 0.00148476,
+       "source": "roofline"
+      },
+      "ii_s": 0.00114202,
+      "resources": {
+       "lut": 2300,
+       "ff": 3450,
+       "dsp": 50,
+       "bram18k": 3
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 400,
+      "time_s": {
+       "value": 0.000917608,
+       "lo": 0.000642326,
+       "hi": 0.00119289,
+       "source": "roofline"
+      },
+      "ii_s": 0.000917608,
+      "resources": {
+       "lut": 4700,
+       "ff": 7050,
+       "dsp": 200,
+       "bram18k": 3
+      }
+     }
+    ]
+   },
+   {
+    "id": "n4",
+    "ops_estimated": 57307068,
+    "sw": {
+     "time_s": {
+      "value": 0.0417864,
+      "lo": 0.0292505,
+      "hi": 0.0543223,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.0818673,
+       "lo": 0.0573071,
+       "hi": 0.106428,
+       "source": "roofline"
+      },
+      "ii_s": 0.0818672,
+      "resources": {
+       "lut": 1724,
+       "ff": 2586,
+       "dsp": 18,
+       "bram18k": 2
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0204669,
+       "lo": 0.0143268,
+       "hi": 0.026607,
+       "source": "roofline"
+      },
+      "ii_s": 0.0204668,
+      "resources": {
+       "lut": 2396,
+       "ff": 3594,
+       "dsp": 72,
+       "bram18k": 2
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 0.00511681,
+       "lo": 0.00358177,
+       "hi": 0.00665185,
+       "source": "roofline"
+      },
+      "ii_s": 0.00511671,
+      "resources": {
+       "lut": 5084,
+       "ff": 7626,
+       "dsp": 288,
+       "bram18k": 2
+      }
+     }
+    ]
+   },
+   {
+    "id": "n5",
+    "ops_estimated": 15876000,
+    "sw": {
+     "time_s": {
+      "value": 0.0115762,
+      "lo": 0.00810337,
+      "hi": 0.0150491,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.0264601,
+       "lo": 0.0185221,
+       "hi": 0.0343981,
+       "source": "roofline"
+      },
+      "ii_s": 0.02646,
+      "resources": {
+       "lut": 2268,
+       "ff": 3402,
+       "dsp": 18,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0066151,
+       "lo": 0.00463057,
+       "hi": 0.00859963,
+       "source": "roofline"
+      },
+      "ii_s": 0.006615,
+      "resources": {
+       "lut": 4572,
+       "ff": 6858,
+       "dsp": 72,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 0.00182963,
+       "lo": 0.00128074,
+       "hi": 0.00237852,
+       "source": "roofline"
+      },
+      "ii_s": 0.00182963,
+      "resources": {
+       "lut": 13788,
+       "ff": 20682,
+       "dsp": 288,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n6",
+    "ops_estimated": 1300000,
+    "sw": {
+     "time_s": {
+      "value": 0.00142187,
+      "lo": 0.000995312,
+      "hi": 0.00184844,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.0040001,
+       "lo": 0.00280007,
+       "hi": 0.00520013,
+       "source": "roofline"
+      },
+      "ii_s": 0.004,
+      "resources": {
+       "lut": 2780,
+       "ff": 4170,
+       "dsp": 30,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0010001,
+       "lo": 0.00070007,
+       "hi": 0.00130013,
+       "source": "roofline"
+      },
+      "ii_s": 0.001,
+      "resources": {
+       "lut": 6620,
+       "ff": 9930,
+       "dsp": 120,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 0.0002501,
+       "lo": 0.00017507,
+       "hi": 0.00032513,
+       "source": "roofline"
+      },
+      "ii_s": 0.00025,
+      "resources": {
+       "lut": 21980,
+       "ff": 32970,
+       "dsp": 480,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n7",
+    "ops_estimated": 180,
+    "sw": {
+     "time_s": {
+      "value": 1.25e-07,
+      "lo": 8.75e-08,
+      "hi": 1.625e-07,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 1e-06,
+       "lo": 7e-07,
+       "hi": 1.3e-06,
+       "source": "roofline"
+      },
+      "ii_s": 9e-07,
+      "resources": {
+       "lut": 1628,
+       "ff": 2442,
+       "dsp": 3,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 3.25e-07,
+       "lo": 2.275e-07,
+       "hi": 4.225e-07,
+       "source": "roofline"
+      },
+      "ii_s": 2.25e-07,
+      "resources": {
+       "lut": 2012,
+       "ff": 3018,
+       "dsp": 12,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 1.6e-07,
+       "lo": 1.12e-07,
+       "hi": 2.08e-07,
+       "source": "roofline"
+      },
+      "ii_s": 6e-08,
+      "resources": {
+       "lut": 3548,
+       "ff": 5322,
+       "dsp": 48,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n8",
+    "ops_estimated": 27648000,
+    "sw": {
+     "time_s": {
+      "value": 0.0192,
+      "lo": 0.01344,
+      "hi": 0.02496,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.0138241,
+       "lo": 0.00967687,
+       "hi": 0.0179713,
+       "source": "roofline"
+      },
+      "ii_s": 0.013824,
+      "resources": {
+       "lut": 2524,
+       "ff": 3786,
+       "dsp": 28,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.00691201,
+       "lo": 0.00483841,
+       "hi": 0.00898562,
+       "source": "roofline"
+      },
+      "ii_s": 0.00691201,
+      "resources": {
+       "lut": 5596,
+       "ff": 8394,
+       "dsp": 112,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 0.00691201,
+       "lo": 0.00483841,
+       "hi": 0.00898562,
+       "source": "roofline"
+      },
+      "ii_s": 0.00691201,
+      "resources": {
+       "lut": 17884,
+       "ff": 26826,
+       "dsp": 448,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n9",
+    "sw": {
+     "time_s": {
+      "value": 0.002,
+      "lo": 0.001,
+      "hi": 0.003,
+      "source": "library_default"
+     }
+    }
+   }
+  ],
+  "edges": []
+ }
+}

@@ -53,3 +53,22 @@ test("nodeLabel copes with a cost that has no hardware options", () => {
   const label = nodeLabel(graph.nodes[0], { id: "n1", sw: { time_s: estimate(0.5) }, hw: [] });
   assert.equal(label, "capture\ncpu 500 ms");
 });
+
+test("a partition colours each node by where it runs and says so in the label", () => {
+  const partition = {
+    nodes: [
+      { id: "n1", target: "sw", pe: "cpu0", point: null },
+      { id: "n2", target: "hw", pe: "fpga0", point: "p3" },
+    ],
+  };
+  const { nodes } = buildElements(graph, partition);
+  assert.equal(nodes[0].data.target, "sw");
+  assert.equal(nodes[0].data.label, "capture\n→ CPU (cpu0)");
+  assert.equal(nodes[1].data.target, "hw");
+  assert.equal(nodes[1].data.label, "filter\n→ FPGA (p3)");
+});
+
+test("nodes the partition does not place (setup) get no target", () => {
+  const { nodes } = buildElements(graph, { nodes: [{ id: "n1", target: "sw", pe: "cpu1" }] });
+  assert.equal("target" in nodes[1].data, false);
+});

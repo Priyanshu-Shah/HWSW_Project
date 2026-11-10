@@ -1,0 +1,34 @@
+{
+  "schema_version": "0.1.0",
+  "id": "toy_forkjoin",
+  "name": "Toy fork-join (synthetic)",
+  "description": "A -> {B, C} -> D. B and C each fit the FPGA alone but not together. Every schedule is hand-checkable: 1000 bytes take 1 ms on bus0.",
+  "provenance": {"kind": "synthetic", "source": "hand-written for unit tests; round numbers, not measurements"},
+  "workload": {"payload": 1000},
+  "arrival": {"kind": "one_shot"},
+  "constraints": {"deadline_ms": 8},
+  "objective": {"weights": {"latency": 1.0}},
+  "platform": {"id": "toy_cpu_fpga", "path": "../../platforms/toy_cpu_fpga.synthetic.json"},
+  "nodes": [
+    {"id": "A", "implementations": [
+      {"id": "sw", "pe_type": "cpu.generic", "cost": {"time_ms": 2, "power_mw": 1000}}
+    ]},
+    {"id": "B", "implementations": [
+      {"id": "sw", "pe_type": "cpu.generic", "cost": {"time_ms": {"expr": 4, "unc": [0.75, 1.25]}, "power_mw": 1000}},
+      {"id": "hw", "pe_type": "fpga.generic", "cost": {"time_ms": 1, "power_mw": 200, "resources": {"LUT": 600}}}
+    ]},
+    {"id": "C", "implementations": [
+      {"id": "sw", "pe_type": "cpu.generic", "cost": {"time_ms": 3, "power_mw": 1000}},
+      {"id": "hw", "pe_type": "fpga.generic", "cost": {"time_ms": 1, "power_mw": 200, "resources": {"LUT": 600}}}
+    ]},
+    {"id": "D", "implementations": [
+      {"id": "sw", "pe_type": "cpu.generic", "cost": {"time_ms": 1, "power_mw": 1000}}
+    ]}
+  ],
+  "edges": [
+    {"src": "A", "dst": "B", "bytes": "payload"},
+    {"src": "A", "dst": "C", "bytes": "payload"},
+    {"src": "B", "dst": "D", "bytes": "payload"},
+    {"src": "C", "dst": "D", "bytes": "payload"}
+  ]
+}

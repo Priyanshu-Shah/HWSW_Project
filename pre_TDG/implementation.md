@@ -314,6 +314,14 @@ pairs; arrival `streaming` instead of `periodic`).
 - Deliver the benchmark outputs (`tdg.costed.json`) to the post_TDG team; their results become
   the end-to-end check of the whole project.
 
+Status (2026-11-10): the partitioner (Thor run 2 hand-over) is in `post_TDG/` (D7, D8 in
+`post_TDG/decisions.md`). `hwsw partition` and the last step of `hwsw run` call its `partition`
+command on the JSON files (`partition_runner.py`); the app has a Partition button. `hwsw bench`
+now also partitions the generated and the reference graph: `20261110_013054` rescored
+(`..._partitioned.md`): all 20 graphs solved to a proven optimum in under 0.5 s; partitioned
+latency within 25% of the reference's on 1 of 10 (follows the op-count errors: t07 0.12x, t09
+4.0x; after their fixes 0.99x and 0.73x).
+
 ## 7. Risks
 
 | Risk | Mitigation |

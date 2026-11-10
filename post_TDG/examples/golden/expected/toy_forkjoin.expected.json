@@ -1,0 +1,20 @@
+{
+  "_note": "Regression snapshot of our own solver on SYNTHETIC inputs. Not hardware measurements.",
+  "graph": "toy_forkjoin.synthetic.json",
+  "solver": "ilp-highs",
+  "loop": "none",
+  "feasible": true,
+  "mapping": {
+    "A": "cpu0/sw",
+    "B": "fpga0/hw",
+    "C": "cpu0/sw",
+    "D": "cpu0/sw"
+  },
+  "lower_bound_latency_ms": 4.0,
+  "latency_ms_nominal": 6.0,
+  "latency_ms_p95": 6.0,
+  "energy_mj_nominal": 6.2,
+  "feasible_fraction": 1.0,
+  "n_samples": 200,
+  "seed": 0
+}

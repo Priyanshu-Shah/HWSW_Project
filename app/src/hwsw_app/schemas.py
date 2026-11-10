@@ -34,6 +34,12 @@ class CostResponse(BaseModel):
     bounds: BoundsOut | None
 
 
+class PartitionResponse(BaseModel):
+    result: dict | None  # post_TDG's partition result; None when the partitioner could not run
+    error: str | None
+    summary: list[str]  # plain-text lines for the results panel
+
+
 class BoardOut(BaseModel):
     id: str
     name: str

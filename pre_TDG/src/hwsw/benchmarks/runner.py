@@ -4,6 +4,7 @@ import json
 import time
 from pathlib import Path
 
+from hwsw.benchmarks.partition_scoring import score_partition
 from hwsw.benchmarks.scoring import score_spec, score_tdg
 from hwsw.benchmarks.scripted_user import answer_batch
 from hwsw.benchmarks.tasks import BenchmarkTask, load_reference, load_task
@@ -47,10 +48,14 @@ def run_task(
         **_effort(run_dir / LOG_FILE_NAME),
         "spec": score_spec(agent.spec, task.expected) if agent.spec else None,
         "tdg": None,
+        "partition": None,
     }
     if agent.tdg is not None:
         reference = load_reference(task, benchmarks_dir)
         result["tdg"] = score_tdg(agent.tdg, reference, task, boards_dir)
+        result["partition"] = _partition_score(
+            agent.tdg, reference, result["tdg"], boards_dir, run_dir
+        )
     write_json(run_dir / "score.json", result)
     return result
 
@@ -65,14 +70,26 @@ def rescore(
         run_dir = Path(result["run_dir"])
         spec, tdg = _read_optional(run_dir / "spec.json"), _read_optional(run_dir / "tdg.json")
         reference = load_reference(task, benchmarks_dir)
+        tdg_score = score_tdg(tdg, reference, task, boards_dir) if tdg else None
         rescored.append(
             {
                 **result,
                 "spec": score_spec(spec, task.expected) if spec else None,
-                "tdg": score_tdg(tdg, reference, task, boards_dir) if tdg else None,
+                "tdg": tdg_score,
+                "partition": _partition_score(tdg, reference, tdg_score, boards_dir, run_dir)
+                if tdg
+                else None,
             }
         )
     return rescored
+
+
+def _partition_score(
+    tdg: dict, reference: dict, tdg_score: dict, boards_dir: Path, run_dir: Path
+) -> dict | None:
+    if not tdg_score.get("valid"):
+        return None
+    return score_partition(tdg, reference, tdg_score.get("matches", {}), boards_dir, run_dir)
 
 
 def _read_optional(path: Path) -> dict | None:
@@ -128,8 +145,9 @@ def results_table(results: list[dict]) -> str:
     """Markdown: one row per run, then the averages."""
     header = (
         "| task | model | spec ok | valid | node F1 | edge F1 | ops ratio | node ops 2x "
-        "| bytes 2x | all-SW ratio | best ratio | rounds | questions | LLM calls | min | error |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+        "| bytes 2x | all-SW ratio | best ratio | part. latency ratio | same side | rounds "
+        "| questions | LLM calls | min | error |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
     )
     rows = [_row(result) for result in results]
     return header + "\n".join(rows) + "\n\n" + _averages(results) + "\n"
@@ -137,6 +155,7 @@ def results_table(results: list[dict]) -> str:
 
 def _row(result: dict) -> str:
     spec, tdg = result["spec"], result["tdg"] or {}
+    partition = result.get("partition") or {}
     spec_ok = "-" if spec is None else f"{sum(spec[key] for key in _SPEC_CHECKS)}/4"
     cells = [
         result["task"],
@@ -144,11 +163,15 @@ def _row(result: dict) -> str:
         spec_ok,
         _cell(tdg.get("valid")),
         *(_cell(tdg.get(key)) for key in _TDG_COLUMNS),
+        _cell(partition.get("latency_ratio")),
+        _cell(partition.get("same_side")),
         result["question_rounds"],
         result["questions"],
         result["llm_calls"],
         result["minutes"],
-        (result["error"] or tdg.get("error") or "")[:80].replace("|", "/"),
+        (result["error"] or tdg.get("error") or partition.get("error") or "")[:80].replace(
+            "|", "/"
+        ),
     ]
     return "| " + " | ".join(map(str, cells)) + " |"
 
@@ -163,6 +186,13 @@ def _averages(results: list[dict]) -> str:
     ratios = [graph["total_ops_ratio"] for graph in graphs if graph.get("total_ops_ratio")]
     within = sum(1 / 2 <= ratio <= 2 for ratio in ratios)
     lines.append(f"Total ops within 2x of the reference: {within} of {len(ratios)}.")
+    partitions = [result.get("partition") or {} for result in results]
+    latency_ratios = [p["latency_ratio"] for p in partitions if p.get("latency_ratio")]
+    if latency_ratios:
+        close = sum(1 / 1.25 <= ratio <= 1.25 for ratio in latency_ratios)
+        lines.append(
+            f"Partitioned latency within 25% of the reference's: {close} of {len(latency_ratios)}."
+        )
     rounds = [result["question_rounds"] for result in results]
     lines.append(f"Mean question rounds: {sum(rounds) / max(len(rounds), 1):.1f}.")
     return " ".join(lines)

@@ -1,5 +1,5 @@
-"""Command line: `hwsw validate | cost | bounds | clarify | build | run | bench | rescore`, and
-`hwsw agents` (draws the agent graph)."""
+"""Command line: `hwsw validate | cost | bounds | partition | clarify | build | run | bench |
+rescore`, and `hwsw agents` (draws the agent graph)."""
 
 from collections.abc import Callable
 from datetime import datetime
@@ -45,6 +45,7 @@ from hwsw.llm import (
 )
 from hwsw.llm.pipeline_agent import agent_graph
 from hwsw.llm.run_log import LOG_FILE_NAME
+from hwsw.partition_runner import DEFAULT_TIME_LIMIT_S, partition_costed_tdg, summary_lines
 from hwsw.platforms import BoardNotFoundError, list_board_ids, load_board
 from hwsw.repo_paths import BENCHMARKS_DIR, LIBRARY_BOARDS_DIR
 from hwsw.validation import ValidationReport, validate_tdg, validate_tdg_file
@@ -118,6 +119,27 @@ def bounds(costed_tdg_file: TdgFile) -> None:
         console.print(f"[yellow]warning:[/yellow] {warning}")
 
 
+@app.command(name="partition")
+def partition_command(
+    costed_tdg_file: TdgFile,
+    out: Annotated[
+        Path | None, typer.Option(help="Result file (default: partition.json next to the TDG).")
+    ] = None,
+    boards_dir: BoardsDir = LIBRARY_BOARDS_DIR,
+    time_limit: Annotated[float, typer.Option(help="Solver budget (s).")] = DEFAULT_TIME_LIMIT_S,
+) -> None:
+    """Run the post_TDG partitioner on a costed TDG: which nodes go to HW and which to SW."""
+    outcome = partition_costed_tdg(
+        costed_tdg_file, out=out, boards_dir=boards_dir, time_limit_s=time_limit
+    )
+    if outcome.result is None:
+        console.print(f"[red]no partition:[/red] {outcome.error}")
+        raise typer.Exit(code=1)
+    for line in summary_lines(outcome.result):
+        console.print(line, markup=False)
+    console.print(f"[green]wrote[/green] {out or costed_tdg_file.with_name('partition.json')}")
+
+
 @app.command()
 def clarify(
     task: Annotated[str, typer.Argument(help="The task in plain English.")],
@@ -160,7 +182,7 @@ def run(
     task: Annotated[str, typer.Argument(help="The task in plain English.")],
     boards_dir: BoardsDir = LIBRARY_BOARDS_DIR,
 ) -> None:
-    """The whole pipeline: questions -> spec -> TDG -> costs -> bounds, in runs/<time>_run/."""
+    """The whole pipeline: questions, spec, TDG, costs, bounds, partition (runs/<time>_run/)."""
     agent = PipelineAgent(
         list_board_ids(boards_dir), boards_dir=boards_dir, run_dir=new_run_dir("run")
     )
@@ -170,6 +192,12 @@ def run(
     tdg_file = agent.run_dir / "tdg.json"
     cost(tdg_file, out=None, boards_dir=boards_dir, constants_file=None)
     bounds(tdg_file.with_name("tdg.costed.json"))
+    partition_command(
+        tdg_file.with_name("tdg.costed.json"),
+        out=None,
+        boards_dir=boards_dir,
+        time_limit=DEFAULT_TIME_LIMIT_S,
+    )
 
 
 @app.command()

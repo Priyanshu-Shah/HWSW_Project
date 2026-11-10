@@ -1,6 +1,7 @@
 import copy
 
 import pytest
+from hwsw.repo_paths import PARTITION_COMMAND
 
 
 @pytest.fixture
@@ -93,3 +94,17 @@ def test_bounds_of_a_tdg_without_costs_is_a_422(client, sobel):
     response = client.post("/api/tdg/bounds", json={"tdg": sobel})
     assert response.status_code == 422
     assert "not a costed TDG" in response.json()["detail"]
+
+
+@pytest.mark.skipif(not PARTITION_COMMAND.is_file(), reason="post_TDG partitioner not installed")
+def test_partition_of_a_costed_tdg(client, sobel):
+    costed = client.post("/api/tdg/cost", json={"tdg": sobel}).json()["costed_tdg"]
+    body = client.post("/api/tdg/partition", json={"tdg": costed}).json()
+    assert body["error"] is None
+    assert {n["id"] for n in body["result"]["nodes"]} == {n["id"] for n in sobel["nodes"]}
+    assert any(line.startswith("hardware:") for line in body["summary"])
+
+
+def test_partition_needs_a_costed_tdg(client, sobel):
+    body = client.post("/api/tdg/partition", json={"tdg": sobel}).json()
+    assert body["result"] is None and "cost the graph first" in body["error"]

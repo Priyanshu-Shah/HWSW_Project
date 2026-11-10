@@ -1,0 +1,23 @@
+{
+  "_note": "Regression snapshot of our own solver on SYNTHETIC inputs. Not hardware measurements.",
+  "graph": "wifi_tx.synthetic.json",
+  "solver": "ilp-highs",
+  "loop": "none",
+  "feasible": true,
+  "mapping": {
+    "scrambler": "scr0/acc",
+    "encoder": "scr0/acc",
+    "interleaver": "big0/big",
+    "qpsk_mod": "big0/big",
+    "pilot_insert": "big0/big",
+    "ifft": "fft0/acc",
+    "cyclic_prefix": "big0/big"
+  },
+  "lower_bound_latency_ms": 7.3,
+  "latency_ms_nominal": 7.467875,
+  "latency_ms_p95": 8.836601415721919,
+  "energy_mj_nominal": 6.69771,
+  "feasible_fraction": 1.0,
+  "n_samples": 200,
+  "seed": 0
+}

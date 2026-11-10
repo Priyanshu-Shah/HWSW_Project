@@ -1,0 +1,650 @@
+{
+  "$defs": {
+    "Assignment": {
+      "additionalProperties": false,
+      "properties": {
+        "impl": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Impl",
+          "type": "string"
+        },
+        "pe": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Pe",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pe",
+        "impl"
+      ],
+      "title": "Assignment",
+      "type": "object"
+    },
+    "Diagnostics": {
+      "additionalProperties": false,
+      "properties": {
+        "loop": {
+          "description": "fb1: back to task generation (spec/graph problem); fb2: back to Bind/Partition.",
+          "enum": [
+            "none",
+            "fb1",
+            "fb2"
+          ],
+          "title": "Loop",
+          "type": "string"
+        },
+        "lower_bound": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LowerBound"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "relaxation": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Violation"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Minimal relaxation that makes the ILP feasible (when it was infeasible).",
+          "title": "Relaxation"
+        },
+        "violations": {
+          "description": "Violations of the returned mapping.",
+          "items": {
+            "$ref": "#/$defs/Violation"
+          },
+          "title": "Violations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "loop",
+        "reasons"
+      ],
+      "title": "Diagnostics",
+      "type": "object"
+    },
+    "Interval": {
+      "additionalProperties": false,
+      "description": "A metric under cost uncertainty: nominal value plus Monte Carlo summary.",
+      "properties": {
+        "hi": {
+          "description": "Maximum over samples (envelope).",
+          "title": "Hi",
+          "type": "number"
+        },
+        "lo": {
+          "description": "Minimum over samples (envelope).",
+          "title": "Lo",
+          "type": "number"
+        },
+        "n_samples": {
+          "minimum": 0,
+          "title": "N Samples",
+          "type": "integer"
+        },
+        "nominal": {
+          "title": "Nominal",
+          "type": "number"
+        },
+        "p05": {
+          "title": "P05",
+          "type": "number"
+        },
+        "p50": {
+          "title": "P50",
+          "type": "number"
+        },
+        "p95": {
+          "title": "P95",
+          "type": "number"
+        }
+      },
+      "required": [
+        "nominal",
+        "lo",
+        "hi",
+        "p05",
+        "p50",
+        "p95",
+        "n_samples"
+      ],
+      "title": "Interval",
+      "type": "object"
+    },
+    "LowerBound": {
+      "additionalProperties": false,
+      "description": "Optimistic bounds: each task on its fastest option, zero communication, unlimited parallelism.",
+      "properties": {
+        "certain": {
+          "description": "Constraints violated even at the low end of every cost interval.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Certain",
+          "type": "array"
+        },
+        "energy_mj": {
+          "title": "Energy Mj",
+          "type": "number"
+        },
+        "ii_ms": {
+          "title": "Ii Ms",
+          "type": "number"
+        },
+        "latency_ms": {
+          "description": "Critical path at nominal costs.",
+          "title": "Latency Ms",
+          "type": "number"
+        },
+        "latency_ms_optimistic": {
+          "description": "Critical path at the low end of every cost interval.",
+          "title": "Latency Ms Optimistic",
+          "type": "number"
+        },
+        "latency_ms_relaxation": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Makespan bound from the mapping relaxation (PE/bus load, transfers, capacity); set when the strong bound was requested. When it exceeds the deadline, no mapping can meet it.",
+          "title": "Latency Ms Relaxation"
+        },
+        "structural": {
+          "description": "Problems no mapping can fix, e.g. no compatible PE.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Structural",
+          "type": "array"
+        },
+        "violations": {
+          "description": "Constraints the bound violates at nominal costs.",
+          "items": {
+            "$ref": "#/$defs/Violation"
+          },
+          "title": "Violations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "latency_ms",
+        "latency_ms_optimistic",
+        "ii_ms",
+        "energy_mj",
+        "violations"
+      ],
+      "title": "LowerBound",
+      "type": "object"
+    },
+    "Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "avg_power_mw": {
+          "$ref": "#/$defs/Interval"
+        },
+        "energy_mj": {
+          "$ref": "#/$defs/Interval"
+        },
+        "feasible_fraction": {
+          "description": "Fraction of Monte Carlo samples meeting all constraints.",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Feasible Fraction",
+          "type": "number"
+        },
+        "ii_ms": {
+          "$ref": "#/$defs/Interval",
+          "description": "Initiation interval (throughput bottleneck) estimate."
+        },
+        "latency_ms": {
+          "$ref": "#/$defs/Interval"
+        },
+        "resources": {
+          "additionalProperties": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object"
+          },
+          "description": "Nominal use per PE per resource.",
+          "title": "Resources",
+          "type": "object"
+        },
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        },
+        "throughput": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThroughputMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Present for streaming arrival."
+        },
+        "usd": {
+          "title": "Usd",
+          "type": "number"
+        }
+      },
+      "required": [
+        "latency_ms",
+        "energy_mj",
+        "ii_ms",
+        "avg_power_mw",
+        "usd",
+        "resources",
+        "feasible_fraction",
+        "seed"
+      ],
+      "title": "Metrics",
+      "type": "object"
+    },
+    "ScheduledComm": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "title": "Bytes",
+          "type": "number"
+        },
+        "dst": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Dst",
+          "type": "string"
+        },
+        "finish_ms": {
+          "title": "Finish Ms",
+          "type": "number"
+        },
+        "interface": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "None when both ends are on the same PE.",
+          "title": "Interface"
+        },
+        "src": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Src",
+          "type": "string"
+        },
+        "start_ms": {
+          "title": "Start Ms",
+          "type": "number"
+        }
+      },
+      "required": [
+        "src",
+        "dst",
+        "bytes",
+        "start_ms",
+        "finish_ms"
+      ],
+      "title": "ScheduledComm",
+      "type": "object"
+    },
+    "ScheduledTask": {
+      "additionalProperties": false,
+      "properties": {
+        "finish_ms": {
+          "title": "Finish Ms",
+          "type": "number"
+        },
+        "impl": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Impl",
+          "type": "string"
+        },
+        "node": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Node",
+          "type": "string"
+        },
+        "pe": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Pe",
+          "type": "string"
+        },
+        "start_ms": {
+          "title": "Start Ms",
+          "type": "number"
+        }
+      },
+      "required": [
+        "node",
+        "pe",
+        "impl",
+        "start_ms",
+        "finish_ms"
+      ],
+      "title": "ScheduledTask",
+      "type": "object"
+    },
+    "SolverInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "objective": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Objective"
+        },
+        "params": {
+          "additionalProperties": true,
+          "title": "Params",
+          "type": "object"
+        },
+        "runtime_s": {
+          "title": "Runtime S",
+          "type": "number"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seed"
+        },
+        "status": {
+          "enum": [
+            "optimal",
+            "feasible",
+            "infeasible",
+            "time_limit",
+            "heuristic",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "status",
+        "runtime_s"
+      ],
+      "title": "SolverInfo",
+      "type": "object"
+    },
+    "ThroughputMetrics": {
+      "additionalProperties": false,
+      "description": "Streaming throughput from max-cycle-ratio analysis of the mapped graph (sim/throughput.py).",
+      "properties": {
+        "buffers": {
+          "title": "Buffers",
+          "type": "integer"
+        },
+        "critical_cycle": {
+          "description": "Actors on the cycle that sets the nominal period.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Critical Cycle",
+          "type": "array"
+        },
+        "input_period_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Period Ms"
+        },
+        "load_bound_ms": {
+          "description": "Per-resource busy-time lower bound (nominal); period >= this.",
+          "title": "Load Bound Ms",
+          "type": "number"
+        },
+        "period_bounds_ms": {
+          "description": "Period at the low/high corner of every cost interval: sound bounds for the frozen order.",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Period Bounds Ms",
+          "type": "array"
+        },
+        "period_ms": {
+          "$ref": "#/$defs/Interval",
+          "description": "Minimum sustainable frame period (Monte Carlo, order frozen)."
+        },
+        "steady_latency_ms": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Interval"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Frame latency in steady state at the input period (inf if input is too fast)."
+        }
+      },
+      "required": [
+        "period_ms",
+        "period_bounds_ms",
+        "load_bound_ms",
+        "buffers",
+        "critical_cycle"
+      ],
+      "title": "ThroughputMetrics",
+      "type": "object"
+    },
+    "Violation": {
+      "additionalProperties": false,
+      "description": "A constraint that is not met. `constraint` names it, e.g. deadline_ms, deadline_ms[track],\ncapacity[fpga0].DSP, period_ms, energy_mj_max.",
+      "properties": {
+        "constraint": {
+          "title": "Constraint",
+          "type": "string"
+        },
+        "excess": {
+          "description": "value - limit, in the constraint's unit.",
+          "title": "Excess",
+          "type": "number"
+        },
+        "limit": {
+          "title": "Limit",
+          "type": "number"
+        },
+        "relative": {
+          "description": "excess / limit.",
+          "title": "Relative",
+          "type": "number"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "constraint",
+        "value",
+        "limit",
+        "excess",
+        "relative"
+      ],
+      "title": "Violation",
+      "type": "object"
+    }
+  },
+  "$id": "result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "comms": {
+      "items": {
+        "$ref": "#/$defs/ScheduledComm"
+      },
+      "title": "Comms",
+      "type": "array"
+    },
+    "diagnostics": {
+      "$ref": "#/$defs/Diagnostics"
+    },
+    "feasible": {
+      "description": "All constraints met at nominal costs.",
+      "title": "Feasible",
+      "type": "boolean"
+    },
+    "graph_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+      "title": "Graph Id",
+      "type": "string"
+    },
+    "mapping": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Assignment"
+      },
+      "title": "Mapping",
+      "type": "object"
+    },
+    "metrics": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Metrics"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "platform_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+      "title": "Platform Id",
+      "type": "string"
+    },
+    "schedule": {
+      "items": {
+        "$ref": "#/$defs/ScheduledTask"
+      },
+      "title": "Schedule",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "0.1.0",
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "solver": {
+      "$ref": "#/$defs/SolverInfo"
+    },
+    "workload": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Workload",
+      "type": "object"
+    }
+  },
+  "required": [
+    "graph_id",
+    "platform_id",
+    "workload",
+    "solver",
+    "mapping",
+    "schedule",
+    "comms",
+    "feasible",
+    "diagnostics"
+  ],
+  "title": "Result",
+  "type": "object"
+}
