@@ -168,6 +168,7 @@ def rebuild_replies(spec: dict, reference: dict) -> list[dict]:
     ]
     return [
         call("submit_spec", spec=spec),
+        call("submit_notes", notes=[]),
         text(json.dumps({"graph_id": reference["graph"]["id"], "nodes": nodes})),
         text(json.dumps({"edges": reference["edges"]})),
         *(text(json.dumps(payload)) for payload in payloads),
@@ -190,7 +191,7 @@ def test_run_task_end_to_end_with_a_fake_model(boards_dir, tmp_path):
     assert result["error"] is None
     assert all(result["spec"][key] for key in ("platform_ok", "hardness_ok", "deadline_ok"))
     assert result["tdg"]["node_f1"] == 1.0 and result["tdg"]["total_ops_ratio"] == 1.0
-    assert result["llm_calls"] == 3 + len(reference["nodes"])
+    assert result["llm_calls"] == 4 + len(reference["nodes"])
     assert "| t02_sobel_edges |" in results_table([result])
 
 

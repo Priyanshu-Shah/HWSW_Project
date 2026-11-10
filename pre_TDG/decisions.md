@@ -1,7 +1,7 @@
 # pre_TDG Decisions
 
 Active decisions internal to our team. Edit in place when one changes; no history. Decision ids
-are global across the repo (D1, D3, D4, D5 are in `../TDG/decisions.md`).
+are global across the repo (D1, D3, D4, D5 are in `../TDG/decisions.md`; D2 and D6 are here).
 
 ## D2. LLM runtime: Ollama on the Jetson AGX Thor
 
@@ -24,3 +24,21 @@ are global across the repo (D1, D3, D4, D5 are in `../TDG/decisions.md`).
   (Ollama's default after 5 idle minutes) left about 65 GB of GPU memory unreleased, even after
   restarting the container; reloading then failed ("model requires more system memory"). Only
   dropping the page cache (above) released it.
+
+## D6. LLM stages as a LangGraph graph of small agents
+
+- Stages A and B are one LangGraph `StateGraph` (`llm/pipeline_agent.py`; `hwsw agents` prints
+  it as Mermaid). Each LLM agent does one job with its own short conversation:
+  `clarifier`, `ask_user` (pauses the graph until the answers come), `researcher` (work per item
+  for each computation step, from the web if needed), `decomposer` (nodes), `edge_builder`, and
+  one payload agent per node kind (`opaque_estimator`, `template_designer`, `loop_nest_writer`).
+- Checkers are plain code, not LLMs: `validator` (schema, R1-R12, costability), then
+  `network_checker`, then `ops_checker`. Each sends a problem back to the agent that made it,
+  which fixes it in its own conversation. Limits: 3 repair rounds; one fix per check, then
+  what is left is a warning.
+- The state holds only JSON-like values and is checkpointed in memory after every agent turn:
+  a failed agent is run again on the user's next message, from the last finished turn.
+- LangGraph only orchestrates. The model is still called through our client (D2), not
+  LangChain's `ChatOllama`, whose structured output relies on Ollama's `format`, which hangs here.
+- Agents run one after another: the Thor serves one request at a time, and parallel requests
+  would need more context memory.

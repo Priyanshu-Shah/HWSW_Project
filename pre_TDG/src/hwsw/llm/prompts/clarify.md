@@ -38,6 +38,9 @@ $boards
    network, record its GFLOPs (or MACs), parameter count and input size, from the web with URLs,
    and also list it in `networks` with its size in GMACs per inference (GMACs = GFLOPs / 2 when
    the source counts a multiply-accumulate as two operations, as most model cards do).
+   Unless the user says otherwise, the network runs at its **standard input size** (e.g. a
+   detector made for 640x640 gets each frame resized or letterboxed to 640x640, whatever the
+   camera resolution); use the published size at that input, and record the resize as a step.
 9. **Finish with `submit_spec`** once nothing is open (`open_questions` must be empty). If it
    returns errors, fix them and call it again.
 

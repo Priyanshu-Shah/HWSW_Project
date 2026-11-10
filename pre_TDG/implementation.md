@@ -64,13 +64,13 @@ We never edit those folders. The validator lives here (`src/hwsw/validation/`).
 | Schemas | `../TDG/schemas/*.json` are the source of truth. The validator checks plain dicts with `jsonschema`; no generated model classes. Sub-schemas are passed to Ollama `format` |
 | File format | JSON everywhere; `jsonschema` for validation |
 | Graph checks | `networkx` (DAG check, topological order, critical path) |
-| LLM client | `openai` package → Ollama on Jetson AGX Thor (D2), `num_ctx ≥ 32768` |
+| LLM client | `httpx` → Ollama's native `/api/chat` on the Jetson AGX Thor (D2), `num_ctx` 32768 |
 | Models to compare | `gpt-oss:20b`, `qwen3:30b`, `gpt-oss:120b` |
 | Web search | `ddgs` (DuckDuckGo, no API key), behind one `web_search` tool; Tavily as an alternative |
 | Page fetch | `httpx` + `trafilatura` (main text only) |
 | HLS calibration | AMD Vitis HLS (C synthesis reports only; no bitstreams) |
 | CLI | `typer` + `rich` |
-| Agent loop | hand-written for the MVP (~100 lines); move to LangGraph only if the state gets complex |
+| Agents | LangGraph `StateGraph` of small agents and checkers (D6); our own tool loop inside each agent |
 | Logging | one JSONL file per run: every prompt, response, tool call, token count, latency |
 
 ## 5. Layout
@@ -81,7 +81,7 @@ We never edit those folders. The validator lives here (`src/hwsw/validation/`).
 pre_TDG/
   pyproject.toml          package `hwsw`, `hwsw` command; venv in .venv/ (git-ignored)
   src/hwsw/
-    cli.py                [done] validate | cost | bounds | clarify | build | run | bench
+    cli.py                [done] validate | cost | bounds | clarify | build | run | bench | agents
     repo_paths.py  json_files.py                               [done] shared helpers
     platforms/            [done] board files -> typed Board
       board_model.py  board_loader.py
@@ -102,11 +102,13 @@ pre_TDG/
       tool_loop.py        [done] tool calls until a final tool (ask_user, submit_spec)
       run_log.py          [done] runs/<time>_<name>/llm.jsonl
       tools/              [done] platform_lookup, web_search, fetch_page (cached in .cache/)
-      clarify.py          [done] stage A: ClarificationAgent (a ConversationAgent) -> spec
-      tdg_builder.py      [done] stage B: spec -> tdg.json (steps 1-5 of Phase 4)
+      graph_state.py      [done] the agents' shared state (D6)
+      graph_conversation.py [done] runs an agent graph as a ConversationAgent (pause, resume, retry)
+      clarify.py          [done] stage A: clarifier + ask_user nodes -> spec
+      tdg_builder.py      [done] stage B: researcher, decomposer, edge/payload agents, checkers
       formulas.py  schema_parts.py   [done] size formulas -> literals (D4); prompt-sized schemas
-      pipeline_agent.py   [done] A then B in one conversation (used by the app and `hwsw run`)
-      prompts/            [done] clarify.md, tdg_builder.md
+      pipeline_agent.py   [done] A then B as one agent graph (used by the app and `hwsw run`)
+      prompts/            [done] clarify.md, research.md, tdg_builder.md
   calibration/            [next] Vitis HLS reference kernels, reports, fit scripts
   benchmarks/             [done] 10 tasks, reference TDGs, results/ (see its README)
   tests/                  [done] mirrors src/hwsw; fixtures/ (platforms/, tdgs/), helpers.py
@@ -202,6 +204,10 @@ Staged generation, one schema-constrained call per step, each checked before the
 
 **Exit:** ≥ 95% valid TDGs within the repair budget on the benchmark set.
 
+**Status (2026-11-09):** done, now as a LangGraph agent graph (D6, `hwsw agents` draws it): a
+researcher agent writes work notes (method and work per item for each step) before step 1, and
+the network-size check runs before the ops check, which no longer judges network nodes.
+
 ### Phase 5: custom_hls (week 2–6, custom_hls track) — built, uncalibrated
 
 **Input:** `tdg.json` + a board file. **Output:** `tdg.costed.json`.
@@ -288,6 +294,17 @@ A quick sanity check of a costed TDG without a partitioner (not a replacement fo
 **Status (2026-11-07):** harness done (`benchmarks/`, `hwsw bench`, `hwsw rescore`); gpt-oss:120b
 runs in `benchmarks/results/`: 10/10 valid TDGs, 40/40 spec checks, total ops within 2x on 7/10,
 about 1.1 question rounds and 9 minutes per task. Other models and the 3 repeats are not run yet.
+With the agent graph (D6), `20261109_231436`: t06 total ops 0.02x -> 0.64x (the researcher
+counted AES at about 490 ops per block); t08 0.34x (efficient DCT, but chroma and color
+conversion missed); t01 3.8x (network run at the full 1280x720 input instead of 640x640).
+After the prompt fixes, all 10 tasks, `20261110_013054`: 10/10 valid, 40/40 spec checks, node F1
+0.79, edge F1 0.94, total ops within 2x on 6/10, 118 minutes. t01 1.84x, t06 1.00x, t08 0.41x.
+New misses: t07 0.12x (batch of 8 dropped from the gemm template); t09 111x (two matrix
+products written as one 6-deep loop nest, 746k ops instead of 864).
+Fixes (builder prompts, a too-deep loop nest check, a check against a total the spec states),
+rerun `20261110_071442` and `20261110_080354`: t07 1.00x (the totals check sent the gemm back
+for its batch), t09 1.33x (one gemm node per product; node F1 0.67, as the reference batches
+pairs; arrival `streaming` instead of `periodic`).
 
 ### Phase 8: Integration and handoff (week 8–9, both tracks)
 - `hwsw run "<task>"`: A → B → C → validate → bounds in one command, resumable from any

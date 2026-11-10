@@ -1,0 +1,48 @@
+[
+  {
+    "task": "t09_kalman_filter",
+    "model": "gpt-oss:120b",
+    "run_dir": "/home/roboticsiitj/Desktop/HWSW_Project-main/pre_TDG/runs/20261110_080354_bench_t09_kalman_filter",
+    "minutes": 14.73,
+    "question_rounds": 1,
+    "questions": 1,
+    "error": null,
+    "llm_calls": 22,
+    "tool_calls": 1,
+    "prompt_tokens": 67176,
+    "output_tokens": 17526,
+    "spec": {
+      "platform_ok": true,
+      "arrival_ok": false,
+      "hardness_ok": true,
+      "deadline_ok": true,
+      "assumptions": 6,
+      "web_sources": 0
+    },
+    "tdg": {
+      "valid": true,
+      "nodes": 15,
+      "reference_nodes": 9,
+      "node_f1": 0.667,
+      "edge_f1": 0.75,
+      "edge_bytes_within_2x": 1.0,
+      "matches": {
+        "n1": "n1",
+        "n7": "n11",
+        "n6": "n9",
+        "n2": "n2",
+        "n4": "n6",
+        "n8": "n13",
+        "n5": "n7",
+        "n9": "n15"
+      },
+      "total_ops_ratio": 1.333,
+      "node_ops_within_2x": 1.0,
+      "all_software_ratio": 0.726,
+      "best_case_ratio": 0.578,
+      "all_software_s": 5.0957527e-05,
+      "best_case_s": 4.0559077000000007e-05,
+      "bounds_warnings": []
+    }
+  }
+]

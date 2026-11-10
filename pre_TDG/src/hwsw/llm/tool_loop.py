@@ -10,6 +10,10 @@ from hwsw.validation.json_schema_rules import check_against_schema
 DEFAULT_MAX_STEPS = 15
 
 
+class StepLimitError(LlmError):
+    """The model kept calling tools and never called a final one."""
+
+
 @dataclass(frozen=True)
 class FinalCall:
     """The call that ended the loop. The caller must append its tool result before continuing."""
@@ -49,7 +53,7 @@ def run_tool_loop(
             result = result or _run(tool, name, arguments)
             client.log.write("tool_call", name=name, arguments=arguments, result=result)
             messages.append(tool_result(name, result))
-    raise LlmError(f"the model did not finish within {max_steps} steps")
+    raise StepLimitError(f"the model did not finish within {max_steps} steps")
 
 
 def tool_result(name: str, content: str) -> dict:

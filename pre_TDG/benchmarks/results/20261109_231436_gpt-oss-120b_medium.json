@@ -1,0 +1,136 @@
+[
+  {
+    "task": "t06_aes_stream",
+    "model": "gpt-oss:120b",
+    "run_dir": "/home/roboticsiitj/Desktop/HWSW_Project-main/pre_TDG/runs/20261109_231436_bench_t06_aes_stream",
+    "minutes": 8.5,
+    "question_rounds": 1,
+    "questions": 1,
+    "error": null,
+    "llm_calls": 17,
+    "tool_calls": 6,
+    "prompt_tokens": 54347,
+    "output_tokens": 10397,
+    "spec": {
+      "platform_ok": true,
+      "arrival_ok": true,
+      "hardness_ok": true,
+      "deadline_ok": true,
+      "assumptions": 5,
+      "web_sources": 0
+    },
+    "tdg": {
+      "valid": true,
+      "nodes": 6,
+      "reference_nodes": 4,
+      "node_f1": 0.8,
+      "edge_f1": 0.667,
+      "edge_bytes_within_2x": null,
+      "matches": {
+        "n3": "n4",
+        "n4": "n6",
+        "n1": "n2",
+        "n2": "n1"
+      },
+      "total_ops_ratio": 0.637,
+      "node_ops_within_2x": 1.0,
+      "all_software_ratio": 0.625,
+      "best_case_ratio": 0.829,
+      "all_software_s": 0.0057483903,
+      "best_case_s": 0.0014081593,
+      "bounds_warnings": []
+    }
+  },
+  {
+    "task": "t08_jpeg_encode",
+    "model": "gpt-oss:120b",
+    "run_dir": "/home/roboticsiitj/Desktop/HWSW_Project-main/pre_TDG/runs/20261109_232306_bench_t08_jpeg_encode",
+    "minutes": 14.08,
+    "question_rounds": 1,
+    "questions": 2,
+    "error": null,
+    "llm_calls": 21,
+    "tool_calls": 4,
+    "prompt_tokens": 63320,
+    "output_tokens": 18280,
+    "spec": {
+      "platform_ok": true,
+      "arrival_ok": true,
+      "hardness_ok": true,
+      "deadline_ok": true,
+      "assumptions": 6,
+      "web_sources": 0
+    },
+    "tdg": {
+      "valid": true,
+      "nodes": 9,
+      "reference_nodes": 7,
+      "node_f1": 0.625,
+      "edge_f1": 0.889,
+      "edge_bytes_within_2x": 0.5,
+      "matches": {
+        "n1": "n1",
+        "n7": "n9",
+        "n6": "n8",
+        "n4": "n4",
+        "n5": "n5"
+      },
+      "total_ops_ratio": 0.34,
+      "node_ops_within_2x": 0.6,
+      "all_software_ratio": 0.336,
+      "best_case_ratio": 0.383,
+      "all_software_s": 0.01294409,
+      "best_case_s": 0.009934549999999999,
+      "bounds_warnings": []
+    }
+  },
+  {
+    "task": "t01_object_detection",
+    "model": "gpt-oss:120b",
+    "run_dir": "/home/roboticsiitj/Desktop/HWSW_Project-main/pre_TDG/runs/20261109_233711_bench_t01_object_detection",
+    "minutes": 19.24,
+    "question_rounds": 1,
+    "questions": 3,
+    "error": null,
+    "llm_calls": 27,
+    "tool_calls": 5,
+    "prompt_tokens": 87033,
+    "output_tokens": 25131,
+    "spec": {
+      "platform_ok": true,
+      "arrival_ok": true,
+      "hardness_ok": true,
+      "deadline_ok": true,
+      "assumptions": 10,
+      "web_sources": 1
+    },
+    "tdg": {
+      "valid": true,
+      "nodes": 11,
+      "reference_nodes": 13,
+      "node_f1": 0.75,
+      "edge_f1": 1.0,
+      "edge_bytes_within_2x": 0.167,
+      "matches": {
+        "n7": "n6",
+        "n13": "n11",
+        "n6": "n5",
+        "n12": "n10",
+        "n5": "n4",
+        "n1": "n2",
+        "n4": "n1",
+        "n11": "n9",
+        "n2": "n3"
+      },
+      "total_ops_ratio": 3.779,
+      "node_ops_within_2x": 0.444,
+      "all_software_ratio": 3.773,
+      "best_case_ratio": 0.674,
+      "all_software_s": 1.659061438,
+      "best_case_s": 0.066688618,
+      "bounds_warnings": [
+        "no partition can meet the deadline: even with every node on its fastest option and no communication, latency is at least 46.3 ms (deadline 33.3 ms)"
+      ]
+    }
+  }
+]

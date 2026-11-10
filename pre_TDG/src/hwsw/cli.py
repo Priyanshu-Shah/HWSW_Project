@@ -1,4 +1,5 @@
-"""Command line: `hwsw validate | cost | bounds | clarify | build | run | bench | rescore`."""
+"""Command line: `hwsw validate | cost | bounds | clarify | build | run | bench | rescore`, and
+`hwsw agents` (draws the agent graph)."""
 
 from collections.abc import Callable
 from datetime import datetime
@@ -42,6 +43,7 @@ from hwsw.llm import (
     TdgBuilder,
     new_run_dir,
 )
+from hwsw.llm.pipeline_agent import agent_graph
 from hwsw.llm.run_log import LOG_FILE_NAME
 from hwsw.platforms import BoardNotFoundError, list_board_ids, load_board
 from hwsw.repo_paths import BENCHMARKS_DIR, LIBRARY_BOARDS_DIR
@@ -214,6 +216,13 @@ def rescore_command(
     write_json(results_file, results)
     results_file.with_suffix(".md").write_text(results_table(results), encoding="utf-8")
     console.print(results_table(results))
+
+
+@app.command()
+def agents(boards_dir: BoardsDir = LIBRARY_BOARDS_DIR) -> None:
+    """Print the agent graph (D6) as a Mermaid diagram; paste it into https://mermaid.live."""
+    graph = agent_graph(list_board_ids(boards_dir), OllamaClient(), boards_dir, tools=[])
+    console.print(graph.compile().get_graph().draw_mermaid(), markup=False)
 
 
 def _converse(agent: ConversationAgent, task: str, is_done: Callable[[], bool]) -> None:
