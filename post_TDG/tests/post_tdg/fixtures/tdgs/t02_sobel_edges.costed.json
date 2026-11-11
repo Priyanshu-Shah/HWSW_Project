@@ -1,0 +1,441 @@
+{
+ "graph": {
+  "id": "t02_sobel_edges",
+  "schema_version": "0.2",
+  "provenance": {
+   "kind": "manual",
+   "source": "benchmark reference: Sobel edge detection, 1080p @ 60 fps"
+  }
+ },
+ "arrival": {
+  "kind": "streaming",
+  "period_s": 0.016666666666666666
+ },
+ "objective": {
+  "latency": 1.0
+ },
+ "platform": "kv260",
+ "nodes": [
+  {
+   "id": "n1",
+   "name": "capture_frame",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 0.001,
+    "source": "library_default"
+   }
+  },
+  {
+   "id": "n2",
+   "name": "to_grayscale",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "rgb": {
+      "shape": [
+       1080,
+       1920,
+       3
+      ],
+      "dtype": "uint8",
+      "dir": "in"
+     },
+     "gray": {
+      "shape": [
+       1080,
+       1920
+      ],
+      "dtype": "uint8",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "y",
+      "range": 1080
+     },
+     {
+      "var": "x",
+      "range": 1920
+     },
+     {
+      "var": "c",
+      "range": 3
+     }
+    ],
+    "body": {
+     "mac": 1
+    },
+    "access": {
+     "rgb": {
+      "pattern": "streaming"
+     },
+     "gray": {
+      "pattern": "streaming"
+     }
+    },
+    "hints": {
+     "unrollable": [
+      "c"
+     ]
+    }
+   },
+   "ops_claimed": 6220800,
+   "ops_unit": "macs"
+  },
+  {
+   "id": "n3",
+   "name": "sobel_gradient",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "gray": {
+      "shape": [
+       1080,
+       1920
+      ],
+      "dtype": "uint8",
+      "dir": "in"
+     },
+     "magnitude": {
+      "shape": [
+       1078,
+       1918
+      ],
+      "dtype": "uint8",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "y",
+      "range": 1078
+     },
+     {
+      "var": "x",
+      "range": 1918
+     },
+     {
+      "var": "ky",
+      "range": 3
+     },
+     {
+      "var": "kx",
+      "range": 3
+     }
+    ],
+    "body": {
+     "mac": 2
+    },
+    "access": {
+     "gray": {
+      "pattern": "sliding_window",
+      "reuse": [
+       "ky",
+       "kx"
+      ]
+     },
+     "magnitude": {
+      "pattern": "streaming"
+     }
+    },
+    "hints": {
+     "unrollable": [
+      "ky",
+      "kx"
+     ]
+    }
+   },
+   "ops_claimed": 37216872,
+   "ops_unit": "macs"
+  },
+  {
+   "id": "n4",
+   "name": "threshold",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "elementwise",
+    "params": {
+     "elements": 2067604,
+     "ops_per_element": 1,
+     "inputs": 1,
+     "dtype": "uint8"
+    }
+   }
+  },
+  {
+   "id": "n5",
+   "name": "write_output",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 0.001,
+    "source": "library_default"
+   }
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "src": "n1",
+   "dst": "n2",
+   "kind": "data",
+   "bytes": 6220800
+  },
+  {
+   "id": "e2",
+   "src": "n2",
+   "dst": "n3",
+   "kind": "data",
+   "bytes": 2073600
+  },
+  {
+   "id": "e3",
+   "src": "n3",
+   "dst": "n4",
+   "kind": "data",
+   "bytes": 2067604
+  },
+  {
+   "id": "e4",
+   "src": "n4",
+   "dst": "n5",
+   "kind": "data",
+   "bytes": 2067604
+  }
+ ],
+ "constraints": {
+  "deadline_s": 0.016666666666666666
+ },
+ "costs": {
+  "nodes": [
+   {
+    "id": "n1",
+    "sw": {
+     "time_s": {
+      "value": 0.001,
+      "lo": 0.0005,
+      "hi": 0.0015,
+      "source": "library_default"
+     }
+    }
+   },
+   {
+    "id": "n2",
+    "ops_estimated": 6220800,
+    "sw": {
+     "time_s": {
+      "value": 0.000972243,
+      "lo": 0.00068057,
+      "hi": 0.00126392,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 3,
+      "time_s": {
+       "value": 0.0103681,
+       "lo": 0.00725767,
+       "hi": 0.0134785,
+       "source": "roofline"
+      },
+      "ii_s": 0.010368,
+      "resources": {
+       "lut": 1524,
+       "ff": 2286,
+       "dsp": 2,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 12,
+      "time_s": {
+       "value": 0.0027648,
+       "lo": 0.00193536,
+       "hi": 0.00359424,
+       "source": "roofline"
+      },
+      "ii_s": 0.0027648,
+      "resources": {
+       "lut": 1596,
+       "ff": 2394,
+       "dsp": 6,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 48,
+      "time_s": {
+       "value": 0.0027648,
+       "lo": 0.00193536,
+       "hi": 0.00359424,
+       "source": "roofline"
+      },
+      "ii_s": 0.0027648,
+      "resources": {
+       "lut": 1884,
+       "ff": 2826,
+       "dsp": 24,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n3",
+    "ops_estimated": 37216872,
+    "sw": {
+     "time_s": {
+      "value": 0.00581659,
+      "lo": 0.00407161,
+      "hi": 0.00756157,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 9,
+      "time_s": {
+       "value": 0.0103381,
+       "lo": 0.00723668,
+       "hi": 0.0134396,
+       "source": "roofline"
+      },
+      "ii_s": 0.010338,
+      "resources": {
+       "lut": 1644,
+       "ff": 2466,
+       "dsp": 9,
+       "bram18k": 2
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 36,
+      "time_s": {
+       "value": 0.0025846,
+       "lo": 0.00180922,
+       "hi": 0.00335999,
+       "source": "roofline"
+      },
+      "ii_s": 0.0025845,
+      "resources": {
+       "lut": 2076,
+       "ff": 3114,
+       "dsp": 36,
+       "bram18k": 2
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 144,
+      "time_s": {
+       "value": 0.0013804,
+       "lo": 0.000966281,
+       "hi": 0.00179452,
+       "source": "roofline"
+      },
+      "ii_s": 0.0013804,
+      "resources": {
+       "lut": 3804,
+       "ff": 5706,
+       "dsp": 144,
+       "bram18k": 2
+      }
+     }
+    ]
+   },
+   {
+    "id": "n4",
+    "ops_estimated": 2067604,
+    "sw": {
+     "time_s": {
+      "value": 0.000344601,
+      "lo": 0.00024122,
+      "hi": 0.000447981,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.0103381,
+       "lo": 0.00723668,
+       "hi": 0.0134396,
+       "source": "roofline"
+      },
+      "ii_s": 0.010338,
+      "resources": {
+       "lut": 1508,
+       "ff": 2262,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0025846,
+       "lo": 0.00180922,
+       "hi": 0.00335999,
+       "source": "roofline"
+      },
+      "ii_s": 0.0025845,
+      "resources": {
+       "lut": 1532,
+       "ff": 2298,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 0.0013784,
+       "lo": 0.000964882,
+       "hi": 0.00179192,
+       "source": "roofline"
+      },
+      "ii_s": 0.0013784,
+      "resources": {
+       "lut": 1628,
+       "ff": 2442,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n5",
+    "sw": {
+     "time_s": {
+      "value": 0.001,
+      "lo": 0.0005,
+      "hi": 0.0015,
+      "source": "library_default"
+     }
+    }
+   }
+  ],
+  "edges": []
+ }
+}

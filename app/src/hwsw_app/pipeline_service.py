@@ -1,12 +1,16 @@
 """The pipeline operations the API offers. Thin: every step is a call into the `hwsw` package."""
 
+import tempfile
 from dataclasses import asdict
+from pathlib import Path
 
 from hwsw.custom_hls import (
     CostEstimationError,
     compute_latency_bounds,
     estimate_costs,
 )
+from hwsw.json_files import write_json
+from hwsw.partition_runner import partition_costed_tdg, summary_lines
 from hwsw.platforms import list_board_ids, load_board
 from hwsw.validation import Issue, validate_tdg, validate_tdg_against_boards
 from hwsw.validation.issue import error
@@ -17,6 +21,7 @@ from hwsw_app.schemas import (
     BoundsOut,
     CostResponse,
     IssueOut,
+    PartitionResponse,
     ValidateResponse,
 )
 from hwsw_app.settings import AppSettings
@@ -69,6 +74,20 @@ class PipelineService:
     def bounds(self, costed_tdg: dict) -> BoundsOut:
         """Raises KeyError or ValueError if `costed_tdg` has no usable cost map."""
         return BoundsOut(**asdict(compute_latency_bounds(costed_tdg)))
+
+    def partition(self, costed_tdg: dict) -> PartitionResponse:
+        """Hand a costed TDG to the post_TDG partitioner, through the JSON files as `hwsw` does."""
+        if "costs" not in costed_tdg:
+            return PartitionResponse(result=None, error="cost the graph first", summary=[])
+        with tempfile.TemporaryDirectory() as folder:
+            costed_file = Path(folder) / "tdg.costed.json"
+            write_json(costed_file, costed_tdg)
+            outcome = partition_costed_tdg(costed_file, boards_dir=self._settings.boards_dir)
+        if outcome.result is None:
+            return PartitionResponse(result=None, error=outcome.error, summary=[])
+        return PartitionResponse(
+            result=outcome.result, error=None, summary=summary_lines(outcome.result)
+        )
 
     def _bounds_or_none(self, costed_tdg: dict) -> BoundsOut | None:
         try:

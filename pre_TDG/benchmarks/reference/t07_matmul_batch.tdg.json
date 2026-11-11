@@ -1,0 +1,74 @@
+{
+  "graph": {
+    "id": "t07_matmul_batch",
+    "schema_version": "0.2",
+    "provenance": {
+      "kind": "manual",
+      "source": "benchmark reference: Matrix multiply 1024x1024, batch"
+    }
+  },
+  "arrival": {
+    "kind": "one_shot"
+  },
+  "objective": {
+    "latency": 1.0
+  },
+  "platform": "zcu104",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "load_matrices",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.05,
+        "source": "library_default"
+      }
+    },
+    {
+      "id": "n2",
+      "name": "batched_gemm",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "gemm",
+        "params": {
+          "M": 1024,
+          "N": 1024,
+          "K": 1024,
+          "batch": 8,
+          "dtype": "fp32"
+        }
+      }
+    },
+    {
+      "id": "n3",
+      "name": "store_results",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.025,
+        "source": "library_default"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "src": "n1",
+      "dst": "n2",
+      "kind": "data",
+      "bytes": 67108864
+    },
+    {
+      "id": "e2",
+      "src": "n2",
+      "dst": "n3",
+      "kind": "data",
+      "bytes": 33554432
+    }
+  ]
+}

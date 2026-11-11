@@ -1,0 +1,151 @@
+{
+  "graph": {
+    "id": "t04_fir_audio",
+    "schema_version": "0.2",
+    "provenance": {
+      "kind": "manual",
+      "source": "benchmark reference: FIR filter on audio, 48 kHz"
+    }
+  },
+  "arrival": {
+    "kind": "streaming",
+    "period_s": 0.01
+  },
+  "objective": {
+    "latency": 1.0
+  },
+  "platform": "pynq_z2",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "read_audio_block",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.0002,
+        "source": "library_default"
+      }
+    },
+    {
+      "id": "n2",
+      "name": "fir_filter",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "x": {
+            "shape": [
+              735
+            ],
+            "dtype": "int16",
+            "dir": "in"
+          },
+          "h": {
+            "shape": [
+              256
+            ],
+            "dtype": "int16",
+            "dir": "in",
+            "const": true
+          },
+          "y": {
+            "shape": [
+              480
+            ],
+            "dtype": "int16",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "n",
+            "range": 480
+          },
+          {
+            "var": "k",
+            "range": 256
+          }
+        ],
+        "body": {
+          "mac": 1
+        },
+        "access": {
+          "x": {
+            "pattern": "sliding_window",
+            "reuse": [
+              "k"
+            ]
+          },
+          "h": {
+            "pattern": "reuse",
+            "reuse": [
+              "n"
+            ]
+          }
+        },
+        "hints": {
+          "unrollable": [
+            "k"
+          ]
+        }
+      },
+      "ops_claimed": 122880,
+      "ops_unit": "macs"
+    },
+    {
+      "id": "n3",
+      "name": "gain_clip",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "elementwise",
+        "params": {
+          "elements": 480,
+          "ops_per_element": 2,
+          "inputs": 1,
+          "dtype": "int16"
+        }
+      }
+    },
+    {
+      "id": "n4",
+      "name": "write_audio_block",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.0002,
+        "source": "library_default"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "src": "n1",
+      "dst": "n2",
+      "kind": "data",
+      "bytes": 1470
+    },
+    {
+      "id": "e2",
+      "src": "n2",
+      "dst": "n3",
+      "kind": "data",
+      "bytes": 960
+    },
+    {
+      "id": "e3",
+      "src": "n3",
+      "dst": "n4",
+      "kind": "data",
+      "bytes": 960
+    }
+  ],
+  "constraints": {
+    "deadline_s": 0.01
+  }
+}

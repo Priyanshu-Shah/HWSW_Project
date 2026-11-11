@@ -6,3 +6,9 @@ __pycache__/
 
 # Run outputs (pre_TDG/runs/<timestamp>_<graph_id>/)
 runs/
+
+# Cached web search results and pages (pre_TDG/.cache/)
+.cache/
+
+# Partitioner Thor run folder: caches, outputs, models (code copied into post_TDG/)
+Partiotiner_THOR_RUN_v2/

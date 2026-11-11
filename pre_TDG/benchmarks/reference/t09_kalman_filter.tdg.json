@@ -1,0 +1,278 @@
+{
+  "graph": {
+    "id": "t09_kalman_filter",
+    "schema_version": "0.2",
+    "provenance": {
+      "kind": "manual",
+      "source": "benchmark reference: Kalman filter at 1 kHz, hard 1 ms limit"
+    }
+  },
+  "arrival": {
+    "kind": "periodic",
+    "period_s": 0.001
+  },
+  "objective": {
+    "latency": 1.0
+  },
+  "platform": "pynq_z2",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "read_sensors",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 5e-05,
+        "source": "library_default"
+      }
+    },
+    {
+      "id": "n2",
+      "name": "predict_state",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "gemm",
+        "params": {
+          "M": 12,
+          "N": 1,
+          "K": 12,
+          "dtype": "fp32"
+        }
+      }
+    },
+    {
+      "id": "n3",
+      "name": "predict_covariance",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "gemm",
+        "params": {
+          "M": 12,
+          "N": 12,
+          "K": 12,
+          "dtype": "fp32",
+          "batch": 2
+        }
+      }
+    },
+    {
+      "id": "n4",
+      "name": "innovation_covariance",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "gemm",
+        "params": {
+          "M": 6,
+          "N": 6,
+          "K": 12,
+          "dtype": "fp32",
+          "batch": 2
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "invert_innovation",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "s_matrix": {
+            "shape": [
+              6,
+              6
+            ],
+            "dtype": "fp32",
+            "dir": "in"
+          },
+          "s_inverse": {
+            "shape": [
+              6,
+              6
+            ],
+            "dtype": "fp32",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "pivot",
+            "range": 6
+          },
+          {
+            "var": "row",
+            "range": 6
+          },
+          {
+            "var": "col",
+            "range": 12
+          }
+        ],
+        "body": {
+          "mac": 1,
+          "div": 1
+        },
+        "access": {
+          "s_matrix": {
+            "pattern": "reuse",
+            "reuse": [
+              "pivot"
+            ]
+          }
+        }
+      },
+      "ops_claimed": 864,
+      "ops_unit": "ops"
+    },
+    {
+      "id": "n6",
+      "name": "kalman_gain",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "gemm",
+        "params": {
+          "M": 12,
+          "N": 6,
+          "K": 6,
+          "dtype": "fp32",
+          "batch": 2
+        }
+      }
+    },
+    {
+      "id": "n7",
+      "name": "update_state",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "gemm",
+        "params": {
+          "M": 12,
+          "N": 1,
+          "K": 6,
+          "dtype": "fp32"
+        }
+      }
+    },
+    {
+      "id": "n8",
+      "name": "update_covariance",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "gemm",
+        "params": {
+          "M": 12,
+          "N": 12,
+          "K": 6,
+          "dtype": "fp32"
+        }
+      }
+    },
+    {
+      "id": "n9",
+      "name": "write_estimate",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 2e-05,
+        "source": "library_default"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "src": "n1",
+      "dst": "n7",
+      "kind": "data",
+      "bytes": 24
+    },
+    {
+      "id": "e2",
+      "src": "n2",
+      "dst": "n3",
+      "kind": "data",
+      "bytes": 48
+    },
+    {
+      "id": "e3",
+      "src": "n3",
+      "dst": "n4",
+      "kind": "data",
+      "bytes": 576
+    },
+    {
+      "id": "e4",
+      "src": "n4",
+      "dst": "n5",
+      "kind": "data",
+      "bytes": 144
+    },
+    {
+      "id": "e5",
+      "src": "n5",
+      "dst": "n6",
+      "kind": "data",
+      "bytes": 144
+    },
+    {
+      "id": "e6",
+      "src": "n3",
+      "dst": "n6",
+      "kind": "data",
+      "bytes": 576
+    },
+    {
+      "id": "e7",
+      "src": "n6",
+      "dst": "n7",
+      "kind": "data",
+      "bytes": 288
+    },
+    {
+      "id": "e8",
+      "src": "n2",
+      "dst": "n7",
+      "kind": "data",
+      "bytes": 48
+    },
+    {
+      "id": "e9",
+      "src": "n6",
+      "dst": "n8",
+      "kind": "data",
+      "bytes": 288
+    },
+    {
+      "id": "e10",
+      "src": "n3",
+      "dst": "n8",
+      "kind": "data",
+      "bytes": 576
+    },
+    {
+      "id": "e11",
+      "src": "n7",
+      "dst": "n9",
+      "kind": "data",
+      "bytes": 48
+    }
+  ],
+  "constraints": {
+    "deadline_s": 0.001
+  }
+}

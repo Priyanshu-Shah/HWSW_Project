@@ -1,0 +1,675 @@
+{
+ "graph": {
+  "id": "t09_kalman_filter",
+  "schema_version": "0.2",
+  "provenance": {
+   "kind": "manual",
+   "source": "benchmark reference: Kalman filter at 1 kHz, hard 1 ms limit"
+  }
+ },
+ "arrival": {
+  "kind": "periodic",
+  "period_s": 0.001
+ },
+ "objective": {
+  "latency": 1.0
+ },
+ "platform": "pynq_z2",
+ "nodes": [
+  {
+   "id": "n1",
+   "name": "read_sensors",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 5e-05,
+    "source": "library_default"
+   }
+  },
+  {
+   "id": "n2",
+   "name": "predict_state",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "gemm",
+    "params": {
+     "M": 12,
+     "N": 1,
+     "K": 12,
+     "dtype": "fp32"
+    }
+   }
+  },
+  {
+   "id": "n3",
+   "name": "predict_covariance",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "gemm",
+    "params": {
+     "M": 12,
+     "N": 12,
+     "K": 12,
+     "dtype": "fp32",
+     "batch": 2
+    }
+   }
+  },
+  {
+   "id": "n4",
+   "name": "innovation_covariance",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "gemm",
+    "params": {
+     "M": 6,
+     "N": 6,
+     "K": 12,
+     "dtype": "fp32",
+     "batch": 2
+    }
+   }
+  },
+  {
+   "id": "n5",
+   "name": "invert_innovation",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "s_matrix": {
+      "shape": [
+       6,
+       6
+      ],
+      "dtype": "fp32",
+      "dir": "in"
+     },
+     "s_inverse": {
+      "shape": [
+       6,
+       6
+      ],
+      "dtype": "fp32",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "pivot",
+      "range": 6
+     },
+     {
+      "var": "row",
+      "range": 6
+     },
+     {
+      "var": "col",
+      "range": 12
+     }
+    ],
+    "body": {
+     "mac": 1,
+     "div": 1
+    },
+    "access": {
+     "s_matrix": {
+      "pattern": "reuse",
+      "reuse": [
+       "pivot"
+      ]
+     }
+    }
+   },
+   "ops_claimed": 864,
+   "ops_unit": "ops"
+  },
+  {
+   "id": "n6",
+   "name": "kalman_gain",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "gemm",
+    "params": {
+     "M": 12,
+     "N": 6,
+     "K": 6,
+     "dtype": "fp32",
+     "batch": 2
+    }
+   }
+  },
+  {
+   "id": "n7",
+   "name": "update_state",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "gemm",
+    "params": {
+     "M": 12,
+     "N": 1,
+     "K": 6,
+     "dtype": "fp32"
+    }
+   }
+  },
+  {
+   "id": "n8",
+   "name": "update_covariance",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "gemm",
+    "params": {
+     "M": 12,
+     "N": 12,
+     "K": 6,
+     "dtype": "fp32"
+    }
+   }
+  },
+  {
+   "id": "n9",
+   "name": "write_estimate",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 2e-05,
+    "source": "library_default"
+   }
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "src": "n1",
+   "dst": "n7",
+   "kind": "data",
+   "bytes": 24
+  },
+  {
+   "id": "e2",
+   "src": "n2",
+   "dst": "n3",
+   "kind": "data",
+   "bytes": 48
+  },
+  {
+   "id": "e3",
+   "src": "n3",
+   "dst": "n4",
+   "kind": "data",
+   "bytes": 576
+  },
+  {
+   "id": "e4",
+   "src": "n4",
+   "dst": "n5",
+   "kind": "data",
+   "bytes": 144
+  },
+  {
+   "id": "e5",
+   "src": "n5",
+   "dst": "n6",
+   "kind": "data",
+   "bytes": 144
+  },
+  {
+   "id": "e6",
+   "src": "n3",
+   "dst": "n6",
+   "kind": "data",
+   "bytes": 576
+  },
+  {
+   "id": "e7",
+   "src": "n6",
+   "dst": "n7",
+   "kind": "data",
+   "bytes": 288
+  },
+  {
+   "id": "e8",
+   "src": "n2",
+   "dst": "n7",
+   "kind": "data",
+   "bytes": 48
+  },
+  {
+   "id": "e9",
+   "src": "n6",
+   "dst": "n8",
+   "kind": "data",
+   "bytes": 288
+  },
+  {
+   "id": "e10",
+   "src": "n3",
+   "dst": "n8",
+   "kind": "data",
+   "bytes": 576
+  },
+  {
+   "id": "e11",
+   "src": "n7",
+   "dst": "n9",
+   "kind": "data",
+   "bytes": 48
+  }
+ ],
+ "constraints": {
+  "deadline_s": 0.001
+ },
+ "costs": {
+  "nodes": [
+   {
+    "id": "n1",
+    "sw": {
+     "time_s": {
+      "value": 5e-05,
+      "lo": 2.5e-05,
+      "hi": 7.5e-05,
+      "source": "library_default"
+     }
+    }
+   },
+   {
+    "id": "n2",
+    "ops_estimated": 144,
+    "sw": {
+     "time_s": {
+      "value": 4.43077e-07,
+      "lo": 3.10154e-07,
+      "hi": 5.76e-07,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 12,
+      "time_s": {
+       "value": 8.4e-07,
+       "lo": 5.88e-07,
+       "hi": 1.092e-06,
+       "source": "roofline"
+      },
+      "ii_s": 8.4e-07,
+      "resources": {
+       "lut": 3036,
+       "ff": 4554,
+       "dsp": 36,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 48,
+      "time_s": {
+       "value": 8.4e-07,
+       "lo": 5.88e-07,
+       "hi": 1.092e-06,
+       "source": "roofline"
+      },
+      "ii_s": 8.4e-07,
+      "resources": {
+       "lut": 7644,
+       "ff": 11466,
+       "dsp": 144,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n3",
+    "ops_estimated": 3456,
+    "sw": {
+     "time_s": {
+      "value": 1.06338e-05,
+      "lo": 7.44369e-06,
+      "hi": 1.3824e-05,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 12,
+      "time_s": {
+       "value": 3.6e-06,
+       "lo": 2.52e-06,
+       "hi": 4.68e-06,
+       "source": "roofline"
+      },
+      "ii_s": 3.6e-06,
+      "resources": {
+       "lut": 3036,
+       "ff": 4554,
+       "dsp": 36,
+       "bram18k": 6
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 48,
+      "time_s": {
+       "value": 3.6e-06,
+       "lo": 2.52e-06,
+       "hi": 4.68e-06,
+       "source": "roofline"
+      },
+      "ii_s": 3.6e-06,
+      "resources": {
+       "lut": 7644,
+       "ff": 11466,
+       "dsp": 144,
+       "bram18k": 24
+      }
+     }
+    ]
+   },
+   {
+    "id": "n4",
+    "ops_estimated": 864,
+    "sw": {
+     "time_s": {
+      "value": 2.65846e-06,
+      "lo": 1.86092e-06,
+      "hi": 3.456e-06,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 12,
+      "time_s": {
+       "value": 1.44e-06,
+       "lo": 1.008e-06,
+       "hi": 1.872e-06,
+       "source": "roofline"
+      },
+      "ii_s": 1.44e-06,
+      "resources": {
+       "lut": 3036,
+       "ff": 4554,
+       "dsp": 36,
+       "bram18k": 6
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 48,
+      "time_s": {
+       "value": 1.44e-06,
+       "lo": 1.008e-06,
+       "hi": 1.872e-06,
+       "source": "roofline"
+      },
+      "ii_s": 1.44e-06,
+      "resources": {
+       "lut": 7644,
+       "ff": 11466,
+       "dsp": 144,
+       "bram18k": 24
+      }
+     }
+    ]
+   },
+   {
+    "id": "n5",
+    "ops_estimated": 864,
+    "sw": {
+     "time_s": {
+      "value": 2.65846e-06,
+      "lo": 1.86092e-06,
+      "hi": 3.456e-06,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 4.52e-06,
+       "lo": 3.164e-06,
+       "hi": 5.876e-06,
+       "source": "roofline"
+      },
+      "ii_s": 4.32e-06,
+      "resources": {
+       "lut": 2396,
+       "ff": 3594,
+       "dsp": 3,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 1.28e-06,
+       "lo": 8.96e-07,
+       "hi": 1.664e-06,
+       "source": "roofline"
+      },
+      "ii_s": 1.08e-06,
+      "resources": {
+       "lut": 5084,
+       "ff": 7626,
+       "dsp": 12,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 4.7e-07,
+       "lo": 3.29e-07,
+       "hi": 6.11e-07,
+       "source": "roofline"
+      },
+      "ii_s": 3.6e-07,
+      "resources": {
+       "lut": 15836,
+       "ff": 23754,
+       "dsp": 48,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n6",
+    "ops_estimated": 864,
+    "sw": {
+     "time_s": {
+      "value": 2.65846e-06,
+      "lo": 1.86092e-06,
+      "hi": 3.456e-06,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 6,
+      "time_s": {
+       "value": 1.64e-06,
+       "lo": 1.148e-06,
+       "hi": 2.132e-06,
+       "source": "roofline"
+      },
+      "ii_s": 1.62e-06,
+      "resources": {
+       "lut": 2268,
+       "ff": 3402,
+       "dsp": 18,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 24,
+      "time_s": {
+       "value": 1.62e-06,
+       "lo": 1.134e-06,
+       "hi": 2.106e-06,
+       "source": "roofline"
+      },
+      "ii_s": 1.62e-06,
+      "resources": {
+       "lut": 4572,
+       "ff": 6858,
+       "dsp": 72,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n7",
+    "ops_estimated": 72,
+    "sw": {
+     "time_s": {
+      "value": 2.21538e-07,
+      "lo": 1.55077e-07,
+      "hi": 2.88e-07,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 6,
+      "time_s": {
+       "value": 4.5e-07,
+       "lo": 3.15e-07,
+       "hi": 5.85e-07,
+       "source": "roofline"
+      },
+      "ii_s": 4.5e-07,
+      "resources": {
+       "lut": 2268,
+       "ff": 3402,
+       "dsp": 18,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 24,
+      "time_s": {
+       "value": 4.5e-07,
+       "lo": 3.15e-07,
+       "hi": 5.85e-07,
+       "source": "roofline"
+      },
+      "ii_s": 4.5e-07,
+      "resources": {
+       "lut": 4572,
+       "ff": 6858,
+       "dsp": 72,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 72,
+      "time_s": {
+       "value": 4.5e-07,
+       "lo": 3.15e-07,
+       "hi": 5.85e-07,
+       "source": "roofline"
+      },
+      "ii_s": 4.5e-07,
+      "resources": {
+       "lut": 10716,
+       "ff": 16074,
+       "dsp": 216,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n8",
+    "ops_estimated": 864,
+    "sw": {
+     "time_s": {
+      "value": 2.65846e-06,
+      "lo": 1.86092e-06,
+      "hi": 3.456e-06,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 6,
+      "time_s": {
+       "value": 1.64e-06,
+       "lo": 1.148e-06,
+       "hi": 2.132e-06,
+       "source": "roofline"
+      },
+      "ii_s": 1.44e-06,
+      "resources": {
+       "lut": 2268,
+       "ff": 3402,
+       "dsp": 18,
+       "bram18k": 3
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 24,
+      "time_s": {
+       "value": 1.44e-06,
+       "lo": 1.008e-06,
+       "hi": 1.872e-06,
+       "source": "roofline"
+      },
+      "ii_s": 1.44e-06,
+      "resources": {
+       "lut": 4572,
+       "ff": 6858,
+       "dsp": 72,
+       "bram18k": 12
+      }
+     }
+    ]
+   },
+   {
+    "id": "n9",
+    "sw": {
+     "time_s": {
+      "value": 2e-05,
+      "lo": 1e-05,
+      "hi": 3e-05,
+      "source": "library_default"
+     }
+    }
+   }
+  ],
+  "edges": []
+ }
+}

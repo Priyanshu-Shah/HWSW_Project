@@ -1,0 +1,163 @@
+{
+  "id": "t03_image_classification",
+  "title": "Image classification (MobileNetV2), one-shot",
+  "task": "Classify a single 640x480 photo with MobileNetV2 on a PYNQ-Z2 board.",
+  "answers": [
+    {
+      "keywords": [
+        "input size",
+        "model input",
+        "network input",
+        "input resolution"
+      ],
+      "answer": "224x224"
+    },
+    {
+      "keywords": [
+        "data type",
+        "precision",
+        "dtype",
+        "quantiz",
+        "bit"
+      ],
+      "answer": "int8"
+    },
+    {
+      "keywords": [
+        "class"
+      ],
+      "answer": "1000 (ImageNet)"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness",
+        "latency",
+        "fast"
+      ],
+      "answer": "none, as fast as possible"
+    },
+    {
+      "keywords": [
+        "batch",
+        "how many",
+        "images"
+      ],
+      "answer": "1"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "pynq_z2"
+    }
+  ],
+  "expected": {
+    "platform": "pynq_z2",
+    "arrival_kind": "one_shot",
+    "hardness": "none",
+    "deadline_s": null
+  },
+  "roles": {
+    "n1": [
+      "load",
+      "read",
+      "image",
+      "file",
+      "decode",
+      "input"
+    ],
+    "n2": [
+      "resize",
+      "normalize",
+      "normalise",
+      "scale",
+      "preprocess",
+      "crop"
+    ],
+    "n3": [
+      "stem",
+      "conv",
+      "first",
+      "backbone"
+    ],
+    "n4": [
+      "block",
+      "bottleneck",
+      "stage",
+      "inverted",
+      "backbone"
+    ],
+    "n5": [
+      "block",
+      "bottleneck",
+      "stage",
+      "inverted",
+      "backbone"
+    ],
+    "n6": [
+      "block",
+      "bottleneck",
+      "stage",
+      "inverted",
+      "backbone"
+    ],
+    "n7": [
+      "block",
+      "bottleneck",
+      "stage",
+      "inverted",
+      "backbone"
+    ],
+    "n8": [
+      "head",
+      "conv",
+      "pointwise",
+      "last",
+      "feature"
+    ],
+    "n9": [
+      "pool",
+      "average",
+      "avg",
+      "global"
+    ],
+    "n10": [
+      "classifier",
+      "fc",
+      "fully",
+      "dense",
+      "linear",
+      "logits"
+    ],
+    "n11": [
+      "argmax",
+      "top",
+      "softmax",
+      "max",
+      "class",
+      "predict",
+      "label"
+    ],
+    "n12": [
+      "output",
+      "report",
+      "print",
+      "write",
+      "result",
+      "label"
+    ]
+  }
+}

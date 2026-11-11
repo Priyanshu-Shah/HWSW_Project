@@ -1,0 +1,45 @@
+[
+  {
+    "task": "t07_matmul_batch",
+    "model": "gpt-oss:120b",
+    "run_dir": "/home/roboticsiitj/Desktop/HWSW_Project-main/pre_TDG/runs/20261110_071442_bench_t07_matmul_batch",
+    "minutes": 7.03,
+    "question_rounds": 0,
+    "questions": 0,
+    "error": null,
+    "llm_calls": 12,
+    "tool_calls": 2,
+    "prompt_tokens": 31933,
+    "output_tokens": 8156,
+    "spec": {
+      "platform_ok": true,
+      "arrival_ok": true,
+      "hardness_ok": true,
+      "deadline_ok": true,
+      "assumptions": 6,
+      "web_sources": 0
+    },
+    "tdg": {
+      "valid": true,
+      "nodes": 4,
+      "reference_nodes": 3,
+      "node_f1": 0.857,
+      "edge_f1": 1.0,
+      "edge_bytes_within_2x": 0.0,
+      "matches": {
+        "n2": "n3",
+        "n1": "n1",
+        "n3": "n4"
+      },
+      "total_ops_ratio": 1.0,
+      "node_ops_within_2x": 1.0,
+      "all_software_ratio": 0.988,
+      "best_case_ratio": 0.988,
+      "all_software_s": 5.967746583,
+      "best_case_s": 5.967746583,
+      "bounds_warnings": [
+        "hardware cannot improve latency by more than 5%; check the graph and the costs"
+      ]
+    }
+  }
+]

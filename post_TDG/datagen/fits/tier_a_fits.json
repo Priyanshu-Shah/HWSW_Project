@@ -1,0 +1,1451 @@
+{
+ "generated_by": "scripts/fit_tier_a.py",
+ "date": "2026-10-20",
+ "software_time": {
+  "source": "E3S 0.9 cords files (EEMBC-measured iterations/s -> task_time), local copy e3s/e3s-0.9",
+  "files": [
+   "auto-indust-cords.tgff",
+   "consumer-cords.tgff",
+   "networking-cords.tgff",
+   "office-automation-cords.tgff",
+   "telecom-cords.tgff"
+  ],
+  "n_task_types": 46,
+  "n_processors": 17,
+  "n_valid_entries": 480,
+  "fraction_missing": 0.38618925831202044,
+  "units": "log10(ms)",
+  "task_base_mean": -0.5432702245649257,
+  "task_base_sd": 1.3095357665197673,
+  "pe_speed_offsets": [
+   -1.1994497981301018,
+   -0.8109555963684899,
+   -0.4612644426176752,
+   -0.44096739629369097,
+   -0.39365212536989325,
+   -0.3123438639500792,
+   -0.26406153506176927,
+   -0.11552116277757854,
+   0.06425004940914018,
+   0.08815972044368538,
+   0.29576468786603166,
+   0.4738476469518327,
+   0.5109837038461235,
+   0.5287865527327021,
+   0.5388222702668332,
+   0.5574465439350517,
+   0.9401547451178777
+  ],
+  "pe_speed_sd": 0.5694698955992379,
+  "noise_sd": 0.29619724787209895,
+  "time_ms_min": 0.00011999999999999995,
+  "time_ms_max": 2399.9999999999995
+ },
+ "fpga_resources": {
+  "source": "QuickEst data1.csv (cornell-zhang/quickest, BSD-3), Vivado 2017.1, 7-series",
+  "n_rows": 1046,
+  "per_resource": {
+   "LUT": {
+    "fraction_zero": 0.0,
+    "log10_mean_positive": 3.2375621322820125,
+    "log10_sd_positive": 0.7524858665814576,
+    "impl_over_hls_q05": 0.2424523142994472,
+    "impl_over_hls_q50": 0.4813414959094578,
+    "impl_over_hls_q95": 0.7710191175072536,
+    "unc_factors": [
+     0.5037012523538037,
+     1.6018131078652842
+    ]
+   },
+   "FF": {
+    "fraction_zero": 0.0,
+    "log10_mean_positive": 3.3599219142616317,
+    "log10_sd_positive": 0.7407121666889303,
+    "impl_over_hls_q05": 0.3036387892170393,
+    "impl_over_hls_q50": 0.6770605976427636,
+    "impl_over_hls_q95": 0.9829939341421144,
+    "unc_factors": [
+     0.4484661938298878,
+     1.4518551774604522
+    ]
+   },
+   "DSP": {
+    "fraction_zero": 0.4560229445506692,
+    "log10_mean_positive": 1.2427297926632561,
+    "log10_sd_positive": 0.6477368491666129,
+    "impl_over_hls_q05": 0.75,
+    "impl_over_hls_q50": 1.0,
+    "impl_over_hls_q95": 1.0606060606060606,
+    "unc_factors": [
+     0.75,
+     1.0606060606060606
+    ]
+   },
+   "BRAM": {
+    "fraction_zero": 0.5602294455066922,
+    "log10_mean_positive": 1.1593149583454043,
+    "log10_sd_positive": 0.7556009916626361,
+    "impl_over_hls_q05": 0.5,
+    "impl_over_hls_q50": 0.9921875,
+    "impl_over_hls_q95": 1.0,
+    "unc_factors": [
+     0.5039370078740157,
+     1.0078740157480315
+    ]
+   }
+  }
+ },
+ "implementation_fronts": {
+  "source": "HLSyn v20 (UCLA-DM/HLSyn, CC BY-SA 4.0; Vitis 2020.2), valid points only",
+  "licence_note": "Derived statistics from a CC BY-SA 4.0 dataset; attribute HLSyn (Bai et al., NeurIPS 2023 D&B).",
+  "n_kernels": 28,
+  "n_valid_points": 4233,
+  "note": "Front over (latency, weighted size = LUT + 50 DSP + 300 BRAM + 0.5 FF); ratios relative to the fastest front point, so latency_ratio >= 1 and resources mostly <= 1 along the front.",
+  "pragma_speedup_log10_mean": 1.8614099643090045,
+  "pragma_speedup_log10_sd": 1.1823779311134193,
+  "fronts": {
+   "2mm": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.301214214102707,
+     "LUT_ratio": 0.6462277980767572,
+     "FF_ratio": 0.5722618396092487,
+     "DSP_ratio": 0.5,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.3119082098696668,
+     "LUT_ratio": 0.4840087021437529,
+     "FF_ratio": 0.4978417325394311,
+     "DSP_ratio": 0.47043010752688175,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 13.124540492369388,
+     "LUT_ratio": 0.3205650973078051,
+     "FF_ratio": 0.332745587793547,
+     "DSP_ratio": 0.29726702508960573,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 21.211763395343656,
+     "LUT_ratio": 0.23881372928251662,
+     "FF_ratio": 0.20411367012455817,
+     "DSP_ratio": 0.12589605734767026,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 28.06795143143589,
+     "LUT_ratio": 0.11849402651542217,
+     "FF_ratio": 0.07614425209551516,
+     "DSP_ratio": 0.03539426523297491,
+     "BRAM_ratio": 1.381578947368421
+    },
+    {
+     "latency_ratio": 31.72206750584828,
+     "LUT_ratio": 0.07537012444656879,
+     "FF_ratio": 0.05428587888189813,
+     "DSP_ratio": 0.031586021505376344,
+     "BRAM_ratio": 1.5394736842105263
+    },
+    {
+     "latency_ratio": 100.05146485462849,
+     "LUT_ratio": 0.04375956262611579,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.1578947368421053
+    }
+   ],
+   "aes": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0035026269702276,
+     "LUT_ratio": 0.4026232671033592,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    }
+   ],
+   "atax": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 2.351384615384615,
+     "LUT_ratio": 0.6366047192168081,
+     "FF_ratio": 0.3482825427449758,
+     "DSP_ratio": 0.6566820276497696,
+     "BRAM_ratio": 0.5674740484429066
+    },
+    {
+     "latency_ratio": 2.6367179487179486,
+     "LUT_ratio": 0.09171486244856158,
+     "FF_ratio": 0.22151880026548507,
+     "DSP_ratio": 0.23847926267281105,
+     "BRAM_ratio": 0.2491349480968858
+    },
+    {
+     "latency_ratio": 2.8984615384615386,
+     "LUT_ratio": 0.0522106030354287,
+     "FF_ratio": 0.13533826504975158,
+     "DSP_ratio": 0.2073732718894009,
+     "BRAM_ratio": 0.2491349480968858
+    },
+    {
+     "latency_ratio": 3.061128205128205,
+     "LUT_ratio": 0.0506826805818838,
+     "FF_ratio": 0.0991242754918057,
+     "DSP_ratio": 0.11981566820276497,
+     "BRAM_ratio": 0.1384083044982699
+    },
+    {
+     "latency_ratio": 3.222974358974359,
+     "LUT_ratio": 0.0306813853602637,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.059907834101382486,
+     "BRAM_ratio": 0.1384083044982699
+    },
+    {
+     "latency_ratio": 5.268923076923077,
+     "LUT_ratio": 0.015828047255831517,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.14186851211072665
+    },
+    {
+     "latency_ratio": 7.481846153846154,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.1453287197231834
+    }
+   ],
+   "bicg-large": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.618934346116598,
+     "LUT_ratio": 0.25075190025701316,
+     "FF_ratio": 0.03519890469829939,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.530612244897959
+    },
+    {
+     "latency_ratio": 1.7955718997273162,
+     "LUT_ratio": 0.051996699095731194,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.8979591836734694
+    },
+    {
+     "latency_ratio": 4.801614681191954,
+     "LUT_ratio": 0.039484084570758166,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 4.8052742681941725,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.46938775510204084
+    }
+   ],
+   "bicg": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.4976422193237684,
+     "LUT_ratio": 1.0132723787052058,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.9024390243902439
+    },
+    {
+     "latency_ratio": 2.926808467944216,
+     "LUT_ratio": 0.9924789854003834,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.8536585365853658
+    },
+    {
+     "latency_ratio": 3.018586334905187,
+     "LUT_ratio": 0.9816398761244655,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.6829268292682927
+    }
+   ],
+   "correlation": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0222128434660922,
+     "LUT_ratio": 0.9801892669819956,
+     "FF_ratio": 0.9967294565814179,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0254777070063694
+    },
+    {
+     "latency_ratio": 1.1158066594104712,
+     "LUT_ratio": 0.8749473581628782,
+     "FF_ratio": 0.889031986931383,
+     "DSP_ratio": 0.7994579945799458,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.5488793620471357,
+     "LUT_ratio": 0.8517118603364205,
+     "FF_ratio": 0.8855682611554339,
+     "DSP_ratio": 0.7967479674796748,
+     "BRAM_ratio": 1.0254777070063694
+    },
+    {
+     "latency_ratio": 8.433394788866924,
+     "LUT_ratio": 0.11429108412600629,
+     "FF_ratio": 0.12301988083698798,
+     "DSP_ratio": 0.11653116531165311,
+     "BRAM_ratio": 1.2038216560509554
+    },
+    {
+     "latency_ratio": 8.501721495368622,
+     "LUT_ratio": 0.11624361772106961,
+     "FF_ratio": 0.12773759735374063,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.2038216560509554
+    },
+    {
+     "latency_ratio": 8.910904284857505,
+     "LUT_ratio": 0.09960009606047633,
+     "FF_ratio": 0.10938527340387313,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.2292993630573248
+    },
+    {
+     "latency_ratio": 36.49834514316178,
+     "LUT_ratio": 0.09629018616937968,
+     "FF_ratio": 0.1088192829884294,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.2292993630573248
+    }
+   ],
+   "covariance": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 3.863212769237237,
+     "LUT_ratio": 0.5610488440677119,
+     "FF_ratio": 1.043890539037062,
+     "DSP_ratio": 1.0638297872340425,
+     "BRAM_ratio": 4.209677419354839
+    },
+    {
+     "latency_ratio": 3.936616264241371,
+     "LUT_ratio": 0.28853672249898665,
+     "FF_ratio": 0.655227056986251,
+     "DSP_ratio": 0.6063829787234043,
+     "BRAM_ratio": 2.596774193548387
+    },
+    {
+     "latency_ratio": 3.941100632015583,
+     "LUT_ratio": 0.2862972485613995,
+     "FF_ratio": 0.6530835655449061,
+     "DSP_ratio": 0.6021276595744681,
+     "BRAM_ratio": 2.596774193548387
+    },
+    {
+     "latency_ratio": 9.365349850754635,
+     "LUT_ratio": 0.4067105765218973,
+     "FF_ratio": 0.22233364975349848,
+     "DSP_ratio": 0.27872340425531916,
+     "BRAM_ratio": 2.274193548387097
+    },
+    {
+     "latency_ratio": 13.367003461371375,
+     "LUT_ratio": 0.289532836702648,
+     "FF_ratio": 0.7128129752681917,
+     "DSP_ratio": 0.32978723404255317,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 14.03042363261817,
+     "LUT_ratio": 0.017203771920753053,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.2580645161290323
+    }
+   ],
+   "doitgen-red": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 3.474100950029667,
+     "LUT_ratio": 0.8980371900826446,
+     "FF_ratio": 0.5467091295116773,
+     "DSP_ratio": 0.5274390243902439,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 3.5864472436863606,
+     "LUT_ratio": 0.7466023875114784,
+     "FF_ratio": 0.4679011535009959,
+     "DSP_ratio": 0.8109756097560976,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 3.703622115981368,
+     "LUT_ratio": 0.7639233241505968,
+     "FF_ratio": 0.5707093921684505,
+     "DSP_ratio": 0.2347560975609756,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 3.831497609580773,
+     "LUT_ratio": 0.8045798898071626,
+     "FF_ratio": 0.4444918685840611,
+     "DSP_ratio": 0.2347560975609756,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 4.426851807647978,
+     "LUT_ratio": 0.2946625344352617,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 4.830460965579327,
+     "LUT_ratio": 0.2890036730945822,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 15.514721026823164,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    }
+   ],
+   "doitgen": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 1.4010720758199562,
+     "LUT_ratio": 1.0731854517297137,
+     "FF_ratio": 0.7912627689632689,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 11.48044967890325,
+     "LUT_ratio": 0.6066068459769068,
+     "FF_ratio": 0.27936318191697457,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    }
+   ],
+   "fdtd-2d-large": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 2.044711745639181,
+     "LUT_ratio": 0.9757839267529284,
+     "FF_ratio": 0.9745512147439112,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 9.873520319262548,
+     "LUT_ratio": 0.9684136818942434,
+     "FF_ratio": 0.9228670542022153,
+     "DSP_ratio": 0.9958432304038005,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 36.05405729488693,
+     "LUT_ratio": 0.8501419933970341,
+     "FF_ratio": 0.7950636944599171,
+     "DSP_ratio": 0.9958432304038005,
+     "BRAM_ratio": 0.6528599605522682
+    },
+    {
+     "latency_ratio": 53.88631330447979,
+     "LUT_ratio": 0.06370910769509082,
+     "FF_ratio": 0.03282774886633165,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.4319526627218935
+    }
+   ],
+   "gemm-blocked": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.3003813435024933,
+     "LUT_ratio": 0.5331371353324319,
+     "FF_ratio": 0.5301418042518874,
+     "DSP_ratio": 0.5,
+     "BRAM_ratio": 0.7064220183486238
+    },
+    {
+     "latency_ratio": 1.9011440305074803,
+     "LUT_ratio": 0.29337345670829246,
+     "FF_ratio": 0.2926850213191753,
+     "DSP_ratio": 0.25,
+     "BRAM_ratio": 0.5596330275229358
+    },
+    {
+     "latency_ratio": 7.871223232619537,
+     "LUT_ratio": 0.27314385202075103,
+     "FF_ratio": 0.2835823681832777,
+     "DSP_ratio": 0.25,
+     "BRAM_ratio": 0.41284403669724773
+    },
+    {
+     "latency_ratio": 59.56028160750953,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.6330275229357798
+    },
+    {
+     "latency_ratio": 63.36667644470519,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.41284403669724773
+    },
+    {
+     "latency_ratio": 501.1542974479319,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    }
+   ],
+   "gemm-ncubed": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.425181598062954,
+     "LUT_ratio": 0.37824189570495464,
+     "FF_ratio": 0.3595146212770344,
+     "DSP_ratio": 0.2489346590909091,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 37.119854721549636,
+     "LUT_ratio": 0.08667562208149428,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.032670454545454544,
+     "BRAM_ratio": 1.2105263157894737
+    },
+    {
+     "latency_ratio": 39.59951573849879,
+     "LUT_ratio": 0.0686652878170821,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.631578947368421
+    },
+    {
+     "latency_ratio": 40.46731234866828,
+     "LUT_ratio": 0.05979871639054138,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.631578947368421
+    },
+    {
+     "latency_ratio": 50.75690072639225,
+     "LUT_ratio": 0.07132703611306566,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.2105263157894737
+    },
+    {
+     "latency_ratio": 77.78232445520581,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.4210526315789473
+    },
+    {
+     "latency_ratio": 674.0922518159806,
+     "LUT_ratio": 0.07986311008763514,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    }
+   ],
+   "gemm-p-large": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0057782235264499,
+     "LUT_ratio": 0.9914756582686115,
+     "FF_ratio": 0.9616026711185309,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.2038887444333006,
+     "LUT_ratio": 1.8304729431079119,
+     "FF_ratio": 2.250323572996192,
+     "DSP_ratio": 0.802610114192496,
+     "BRAM_ratio": 0.6411092985318108
+    },
+    {
+     "latency_ratio": 1.2154451914862003,
+     "LUT_ratio": 1.8307002588874155,
+     "FF_ratio": 2.2311342874828837,
+     "DSP_ratio": 0.802610114192496,
+     "BRAM_ratio": 0.6411092985318108
+    },
+    {
+     "latency_ratio": 1.3689808451890098,
+     "LUT_ratio": 1.8282124139672917,
+     "FF_ratio": 2.2173191273845925,
+     "DSP_ratio": 0.802610114192496,
+     "BRAM_ratio": 0.6411092985318108
+    },
+    {
+     "latency_ratio": 10.829364931961418,
+     "LUT_ratio": 0.4636231609522005,
+     "FF_ratio": 0.3854739172028287,
+     "DSP_ratio": 0.29526916802610115,
+     "BRAM_ratio": 0.2398042414355628
+    },
+    {
+     "latency_ratio": 17.892335186492165,
+     "LUT_ratio": 0.46419145040095977,
+     "FF_ratio": 0.38297912250755006,
+     "DSP_ratio": 0.2936378466557912,
+     "BRAM_ratio": 0.052202283849918436
+    },
+    {
+     "latency_ratio": 17.91214623858285,
+     "LUT_ratio": 0.449782155711309,
+     "FF_ratio": 0.37193074599988746,
+     "DSP_ratio": 0.2936378466557912,
+     "BRAM_ratio": 0.052202283849918436
+    }
+   ],
+   "gemm-p": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0190269273816577,
+     "LUT_ratio": 0.6203953815872911,
+     "FF_ratio": 0.6142730931003209,
+     "DSP_ratio": 0.6006106022758813,
+     "BRAM_ratio": 0.6354166666666666
+    },
+    {
+     "latency_ratio": 1.3532819803805385,
+     "LUT_ratio": 0.15340698526686816,
+     "FF_ratio": 0.27205992421418446,
+     "DSP_ratio": 0.18040521787399388,
+     "BRAM_ratio": 0.3046875
+    },
+    {
+     "latency_ratio": 2.040226479689249,
+     "LUT_ratio": 0.07460037718135176,
+     "FF_ratio": 0.12454174823963815,
+     "DSP_ratio": 0.054954204829308906,
+     "BRAM_ratio": 0.3411458333333333
+    },
+    {
+     "latency_ratio": 6.989861083678978,
+     "LUT_ratio": 0.0701697316082914,
+     "FF_ratio": 0.11344097541216976,
+     "DSP_ratio": 0.034415764640577294,
+     "BRAM_ratio": 0.2109375
+    },
+    {
+     "latency_ratio": 12.480808479820922,
+     "LUT_ratio": 0.05536042231134756,
+     "FF_ratio": 0.07875326169587639,
+     "DSP_ratio": 0.03913405495420483,
+     "BRAM_ratio": 0.14322916666666666
+    },
+    {
+     "latency_ratio": 17.45006254526302,
+     "LUT_ratio": 0.03590222932296771,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.019150707743547043,
+     "BRAM_ratio": 0.1953125
+    },
+    {
+     "latency_ratio": 29.913490025676477,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.15885416666666666
+    }
+   ],
+   "gemver": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0004895161948275,
+     "LUT_ratio": 0.8560701409618485,
+     "FF_ratio": 1.0251602236748034,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.1594191074488047,
+     "LUT_ratio": 0.8626882182239042,
+     "FF_ratio": 0.9095566081094884,
+     "DSP_ratio": 0.8924515698062793,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.295341437545892,
+     "LUT_ratio": 0.17834599222668993,
+     "FF_ratio": 0.5063227709120621,
+     "DSP_ratio": 0.6205744822979292,
+     "BRAM_ratio": 1.920863309352518
+    },
+    {
+     "latency_ratio": 1.4851105490739984,
+     "LUT_ratio": 0.15574328680785943,
+     "FF_ratio": 0.40945447349606784,
+     "DSP_ratio": 0.38877755511022044,
+     "BRAM_ratio": 1.460431654676259
+    },
+    {
+     "latency_ratio": 1.7442277882026598,
+     "LUT_ratio": 0.08531245104381252,
+     "FF_ratio": 0.23851304769686446,
+     "DSP_ratio": 0.19505678022712092,
+     "BRAM_ratio": 1.2302158273381294
+    },
+    {
+     "latency_ratio": 2.576894835604145,
+     "LUT_ratio": 0.0598461749964565,
+     "FF_ratio": 0.17939944847308753,
+     "DSP_ratio": 0.12491649966599866,
+     "BRAM_ratio": 1.2374100719424461
+    },
+    {
+     "latency_ratio": 3.8092518560822386,
+     "LUT_ratio": 0.05909804452335456,
+     "FF_ratio": 0.181799611888469,
+     "DSP_ratio": 0.20908483633934535,
+     "BRAM_ratio": 1.0215827338129497
+    }
+   ],
+   "gesummv": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0001122208506341,
+     "LUT_ratio": 0.8457885903057972,
+     "FF_ratio": 0.8009479947393381,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0428683649422064,
+     "LUT_ratio": 0.7557633759328429,
+     "FF_ratio": 0.670064584891731,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.2155762540680057,
+     "LUT_ratio": 0.07535364872036422,
+     "FF_ratio": 0.0948165857522111,
+     "DSP_ratio": 0.06783625730994151,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 1.222982830209853,
+     "LUT_ratio": 0.06711136728936604,
+     "FF_ratio": 0.08156959376543119,
+     "DSP_ratio": 0.05672514619883041,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 1.2930086410054988,
+     "LUT_ratio": 0.06665938759290341,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.04152046783625731,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 5.650207608573673,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0344827586206897
+    }
+   ],
+   "mvt": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0710139979515192,
+     "LUT_ratio": 0.8269255954861355,
+     "FF_ratio": 0.7178073190008081,
+     "DSP_ratio": 0.7227822580645161,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.195288494366678,
+     "LUT_ratio": 0.7557508369330745,
+     "FF_ratio": 0.5776522719805348,
+     "DSP_ratio": 0.5934139784946236,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.5930351655855242,
+     "LUT_ratio": 0.6985038569815859,
+     "FF_ratio": 0.47976441022635447,
+     "DSP_ratio": 0.5026881720430108,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 2.9470809149880504,
+     "LUT_ratio": 0.08128614398171248,
+     "FF_ratio": 0.15980454840113312,
+     "DSP_ratio": 0.11391129032258064,
+     "BRAM_ratio": 1.4155844155844155
+    },
+    {
+     "latency_ratio": 6.289518607033117,
+     "LUT_ratio": 0.055831256108556146,
+     "FF_ratio": 0.09678228592233441,
+     "DSP_ratio": 0.07560483870967742,
+     "BRAM_ratio": 1.4155844155844155
+    },
+    {
+     "latency_ratio": 8.118811881188119,
+     "LUT_ratio": 0.03633366489556872,
+     "FF_ratio": 0.07044826881920949,
+     "DSP_ratio": 0.032594086021505375,
+     "BRAM_ratio": 1.4285714285714286
+    },
+    {
+     "latency_ratio": 41.23386821440765,
+     "LUT_ratio": 0.01597776404386146,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.025974025974026
+    }
+   ],
+   "nw": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0011669303797468,
+     "LUT_ratio": 0.9952799754445969,
+     "FF_ratio": 0.9435207862346144,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0019778481012658,
+     "LUT_ratio": 0.5383709494547072,
+     "FF_ratio": 0.5359677216779704,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.003817246835443,
+     "LUT_ratio": 0.5094463132442574,
+     "FF_ratio": 0.5246875784978648,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0046083860759494,
+     "LUT_ratio": 0.32433177356410403,
+     "FF_ratio": 0.32692790756091433,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0082278481012659,
+     "LUT_ratio": 0.3238431711549183,
+     "FF_ratio": 0.3269593067068576,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 2.3037776898734177,
+     "LUT_ratio": 0.0457845513940829,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0625
+    },
+    {
+     "latency_ratio": 2.7357594936708862,
+     "LUT_ratio": 0.03958305927749485,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.890625
+    }
+   ],
+   "spmv-crs": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 124.0,
+     "LUT_ratio": 0.9553900806121055,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    }
+   ],
+   "spmv-ellpack": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0003310710147326,
+     "LUT_ratio": 0.6682026558002345,
+     "FF_ratio": 0.6461339476981529,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0206919384207913,
+     "LUT_ratio": 0.28356175742427653,
+     "FF_ratio": 0.2495452891960713,
+     "DSP_ratio": 0.625,
+     "BRAM_ratio": 1.3571428571428572
+    },
+    {
+     "latency_ratio": 5.264360205264029,
+     "LUT_ratio": 0.19674480863312763,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.3571428571428572
+    },
+    {
+     "latency_ratio": 8.326436020526403,
+     "LUT_ratio": 0.2926592354801644,
+     "FF_ratio": 0.35097611252576694,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    }
+   ],
+   "stencil-3d": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.1268207138436146,
+     "LUT_ratio": 0.49402214673313627,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.6049382716049383
+    },
+    {
+     "latency_ratio": 1.3676191458634206,
+     "LUT_ratio": 0.4912868928398112,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.4074074074074074
+    },
+    {
+     "latency_ratio": 1.461863008046214,
+     "LUT_ratio": 0.42617020337936207,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.4074074074074074
+    },
+    {
+     "latency_ratio": 1.684021043944708,
+     "LUT_ratio": 0.42317024749636034,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.4074074074074074
+    }
+   ],
+   "stencil": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.017895185342991,
+     "LUT_ratio": 0.32595775186851833,
+     "FF_ratio": 0.32564346064859495,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0724328930549638,
+     "LUT_ratio": 0.19963961694769117,
+     "FF_ratio": 0.1911955075496123,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 3.594375798892203,
+     "LUT_ratio": 0.17499164434455333,
+     "FF_ratio": 0.11450781469156868,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 2.0
+    },
+    {
+     "latency_ratio": 4.31998295696634,
+     "LUT_ratio": 0.030295911299268095,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.5161290322580645
+    },
+    {
+     "latency_ratio": 13.511291009799745,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.2903225806451613
+    },
+    {
+     "latency_ratio": 13.536003408606732,
+     "LUT_ratio": 0.03435990835420229,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    },
+    {
+     "latency_ratio": 41.61184490839369,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.0
+    }
+   ],
+   "symm-opt": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.8434073657576608,
+     "LUT_ratio": 0.7137657269130698,
+     "FF_ratio": 0.6635634874788443,
+     "DSP_ratio": 0.5,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 16.018976665729546,
+     "LUT_ratio": 0.4418995259649998,
+     "FF_ratio": 0.29190356024444375,
+     "DSP_ratio": 0.156062874251497,
+     "BRAM_ratio": 1.4528301886792452
+    },
+    {
+     "latency_ratio": 83.89204385718303,
+     "LUT_ratio": 0.08241704387496882,
+     "FF_ratio": 0.05951172053145237,
+     "DSP_ratio": 0.03480538922155688,
+     "BRAM_ratio": 2.811320754716981
+    },
+    {
+     "latency_ratio": 87.7965982569581,
+     "LUT_ratio": 0.05237106604412446,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.6037735849056605
+    },
+    {
+     "latency_ratio": 90.83511385999438,
+     "LUT_ratio": 0.0520859322094308,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.6037735849056605
+    },
+    {
+     "latency_ratio": 143.4240933370818,
+     "LUT_ratio": 0.029117065260006417,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.6037735849056605
+    },
+    {
+     "latency_ratio": 199.4263424233905,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.6037735849056605
+    }
+   ],
+   "symm": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.089358613326834,
+     "LUT_ratio": 0.5898396826352974,
+     "FF_ratio": 0.8227486758974861,
+     "DSP_ratio": 0.6234567901234568,
+     "BRAM_ratio": 0.8688524590163934
+    },
+    {
+     "latency_ratio": 1.1529383091509726,
+     "LUT_ratio": 0.526852943454353,
+     "FF_ratio": 0.775255899864966,
+     "DSP_ratio": 0.4691358024691358,
+     "BRAM_ratio": 0.8688524590163934
+    },
+    {
+     "latency_ratio": 1.2419525324587593,
+     "LUT_ratio": 0.4892261223506329,
+     "FF_ratio": 0.7488857948463201,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.8688524590163934
+    },
+    {
+     "latency_ratio": 1.7756722890544905,
+     "LUT_ratio": 0.2943411326340066,
+     "FF_ratio": 0.5288014161075234,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.3934426229508197
+    },
+    {
+     "latency_ratio": 1.7772644306040866,
+     "LUT_ratio": 0.14466426291015172,
+     "FF_ratio": 0.2358686602251499,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.1311475409836065
+    },
+    {
+     "latency_ratio": 1.7837787002720682,
+     "LUT_ratio": 0.07597649022864371,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.9180327868852458
+    },
+    {
+     "latency_ratio": 5.1190105939668165,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.3934426229508197
+    }
+   ],
+   "syr2k": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0126706579239126,
+     "LUT_ratio": 0.9939971827933687,
+     "FF_ratio": 1.0069640062597809,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0380119737717382,
+     "LUT_ratio": 0.9890345649582837,
+     "FF_ratio": 0.9948513302034429,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.088694605467389,
+     "LUT_ratio": 0.9866941163723046,
+     "FF_ratio": 0.9888106416275431,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.9502993442934524,
+     "LUT_ratio": 0.5795210748726839,
+     "FF_ratio": 0.5622222222222222,
+     "DSP_ratio": 0.5,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 3.4707782951629764,
+     "LUT_ratio": 0.4112904973453245,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.25,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 6.511736196902024,
+     "LUT_ratio": 0.32142160580777984,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.125,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 12.59365200038012,
+     "LUT_ratio": 0.2659009643515007,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    }
+   ],
+   "syrk": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0298889837745517,
+     "LUT_ratio": 0.9702580730364454,
+     "FF_ratio": 0.986114905075023,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.7248505550811273,
+     "LUT_ratio": 0.06348678667874985,
+     "FF_ratio": 0.09073237595363993,
+     "DSP_ratio": 0.10795454545454546,
+     "BRAM_ratio": 0.16083916083916083
+    },
+    {
+     "latency_ratio": 1.7703956732137773,
+     "LUT_ratio": 0.06296535800973638,
+     "FF_ratio": 0.08884460791008957,
+     "DSP_ratio": 0.10795454545454546,
+     "BRAM_ratio": 0.16083916083916083
+    },
+    {
+     "latency_ratio": 2.0436663820096785,
+     "LUT_ratio": 0.060285351269872355,
+     "FF_ratio": 0.08742268443542565,
+     "DSP_ratio": 0.10795454545454546,
+     "BRAM_ratio": 0.16083916083916083
+    },
+    {
+     "latency_ratio": 2.1165955024195844,
+     "LUT_ratio": 0.06415849609953139,
+     "FF_ratio": 0.06810598817584047,
+     "DSP_ratio": 0.06534090909090909,
+     "BRAM_ratio": 0.13636363636363635
+    },
+    {
+     "latency_ratio": 6.142727013948193,
+     "LUT_ratio": 0.028302874916320945,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.026988636363636364,
+     "BRAM_ratio": 0.16083916083916083
+    },
+    {
+     "latency_ratio": 11.608141189866211,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 0.16083916083916083
+    }
+   ],
+   "trmm-opt": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 1.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 2.278928136419001,
+     "LUT_ratio": 0.31928901779980806,
+     "FF_ratio": 0.23370487750540786,
+     "DSP_ratio": 0.125,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 90.96132764920829,
+     "LUT_ratio": 0.09573259161453711,
+     "FF_ratio": 0.06518767651941444,
+     "DSP_ratio": 0.016171993911719938,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 104.1163215590743,
+     "LUT_ratio": 0.04517774555004798,
+     "FF_ratio": 0.03589533521620709,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.5333333333333334
+    },
+    {
+     "latency_ratio": 145.77283800243606,
+     "LUT_ratio": 0.023510609897761135,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 2.3333333333333335
+    },
+    {
+     "latency_ratio": 161.942143727162,
+     "LUT_ratio": 0.02326709813343723,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.8
+    },
+    {
+     "latency_ratio": 185.9677222898904,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.5333333333333334
+    },
+    {
+     "latency_ratio": 308.0140073081608,
+     "LUT_ratio": 0.0,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.2666666666666666
+    }
+   ],
+   "trmm": [
+    {
+     "latency_ratio": 1.0,
+     "LUT_ratio": 1.0,
+     "FF_ratio": 1.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.001174076967594,
+     "LUT_ratio": 0.69668,
+     "FF_ratio": 1.3271963638455786,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 1.0
+    },
+    {
+     "latency_ratio": 1.0039987104721306,
+     "LUT_ratio": 0.22345,
+     "FF_ratio": 0.0,
+     "DSP_ratio": 0.0,
+     "BRAM_ratio": 4.0
+    }
+   ]
+  }
+ },
+ "hw_speedup_prior": {
+  "source": "SYNTHETIC ASSUMPTION (no public paired SW/HW per-task measurements; survey \u00a75 gap 1). Lognormal on t_SW / t_HW of the fastest HW option, median 5x, 90% within about [0.6x, 40x]; replace with DS3 ratios or our own board measurements.",
+  "log10_median": 0.6989700043360189,
+  "log10_sd": 0.65
+ }
+}

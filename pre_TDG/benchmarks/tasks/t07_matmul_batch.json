@@ -1,0 +1,78 @@
+{
+  "id": "t07_matmul_batch",
+  "title": "Matrix multiply 1024x1024, batch",
+  "task": "Multiply a batch of 8 pairs of 1024x1024 fp32 matrices on a ZCU104, as fast as possible.",
+  "answers": [
+    {
+      "keywords": [
+        "data type",
+        "precision",
+        "dtype",
+        "bit"
+      ],
+      "answer": "fp32"
+    },
+    {
+      "keywords": [
+        "batch",
+        "how many",
+        "pairs"
+      ],
+      "answer": "8"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness",
+        "latency",
+        "fast"
+      ],
+      "answer": "none, as fast as possible"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "zcu104"
+    }
+  ],
+  "expected": {
+    "platform": "zcu104",
+    "arrival_kind": "one_shot",
+    "hardness": "none",
+    "deadline_s": null
+  },
+  "roles": {
+    "n1": [
+      "load",
+      "read",
+      "input",
+      "file"
+    ],
+    "n2": [
+      "gemm",
+      "matmul",
+      "multiply",
+      "matrix",
+      "product"
+    ],
+    "n3": [
+      "store",
+      "write",
+      "output",
+      "save"
+    ]
+  }
+}

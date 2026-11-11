@@ -1,0 +1,308 @@
+{
+ "graph": {
+  "id": "t04_fir_audio",
+  "schema_version": "0.2",
+  "provenance": {
+   "kind": "manual",
+   "source": "benchmark reference: FIR filter on audio, 48 kHz"
+  }
+ },
+ "arrival": {
+  "kind": "streaming",
+  "period_s": 0.01
+ },
+ "objective": {
+  "latency": 1.0
+ },
+ "platform": "pynq_z2",
+ "nodes": [
+  {
+   "id": "n1",
+   "name": "read_audio_block",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 0.0002,
+    "source": "library_default"
+   }
+  },
+  {
+   "id": "n2",
+   "name": "fir_filter",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "x": {
+      "shape": [
+       735
+      ],
+      "dtype": "int16",
+      "dir": "in"
+     },
+     "h": {
+      "shape": [
+       256
+      ],
+      "dtype": "int16",
+      "dir": "in",
+      "const": true
+     },
+     "y": {
+      "shape": [
+       480
+      ],
+      "dtype": "int16",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "n",
+      "range": 480
+     },
+     {
+      "var": "k",
+      "range": 256
+     }
+    ],
+    "body": {
+     "mac": 1
+    },
+    "access": {
+     "x": {
+      "pattern": "sliding_window",
+      "reuse": [
+       "k"
+      ]
+     },
+     "h": {
+      "pattern": "reuse",
+      "reuse": [
+       "n"
+      ]
+     }
+    },
+    "hints": {
+     "unrollable": [
+      "k"
+     ]
+    }
+   },
+   "ops_claimed": 122880,
+   "ops_unit": "macs"
+  },
+  {
+   "id": "n3",
+   "name": "gain_clip",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "elementwise",
+    "params": {
+     "elements": 480,
+     "ops_per_element": 2,
+     "inputs": 1,
+     "dtype": "int16"
+    }
+   }
+  },
+  {
+   "id": "n4",
+   "name": "write_audio_block",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 0.0002,
+    "source": "library_default"
+   }
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "src": "n1",
+   "dst": "n2",
+   "kind": "data",
+   "bytes": 1470
+  },
+  {
+   "id": "e2",
+   "src": "n2",
+   "dst": "n3",
+   "kind": "data",
+   "bytes": 960
+  },
+  {
+   "id": "e3",
+   "src": "n3",
+   "dst": "n4",
+   "kind": "data",
+   "bytes": 960
+  }
+ ],
+ "constraints": {
+  "deadline_s": 0.01
+ },
+ "costs": {
+  "nodes": [
+   {
+    "id": "n1",
+    "sw": {
+     "time_s": {
+      "value": 0.0002,
+      "lo": 0.0001,
+      "hi": 0.0003,
+      "source": "library_default"
+     }
+    }
+   },
+   {
+    "id": "n2",
+    "ops_estimated": 122880,
+    "sw": {
+     "time_s": {
+      "value": 9.45231e-05,
+      "lo": 6.61662e-05,
+      "hi": 0.00012288,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.001229,
+       "lo": 0.0008603,
+       "hi": 0.0015977,
+       "source": "roofline"
+      },
+      "ii_s": 0.0012288,
+      "resources": {
+       "lut": 1516,
+       "ff": 2274,
+       "dsp": 1,
+       "bram18k": 2
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0003074,
+       "lo": 0.00021518,
+       "hi": 0.00039962,
+       "source": "roofline"
+      },
+      "ii_s": 0.0003072,
+      "resources": {
+       "lut": 1564,
+       "ff": 2346,
+       "dsp": 4,
+       "bram18k": 3
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 7.7e-05,
+       "lo": 5.39e-05,
+       "hi": 0.0001001,
+       "source": "roofline"
+      },
+      "ii_s": 7.68e-05,
+      "resources": {
+       "lut": 1756,
+       "ff": 2634,
+       "dsp": 16,
+       "bram18k": 9
+      }
+     }
+    ]
+   },
+   {
+    "id": "n3",
+    "ops_estimated": 960,
+    "sw": {
+     "time_s": {
+      "value": 7.38462e-07,
+      "lo": 5.16923e-07,
+      "hi": 9.6e-07,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 5e-06,
+       "lo": 3.5e-06,
+       "hi": 6.5e-06,
+       "source": "roofline"
+      },
+      "ii_s": 4.8e-06,
+      "resources": {
+       "lut": 1532,
+       "ff": 2298,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 2.4e-06,
+       "lo": 1.68e-06,
+       "hi": 3.12e-06,
+       "source": "roofline"
+      },
+      "ii_s": 2.4e-06,
+      "resources": {
+       "lut": 1628,
+       "ff": 2442,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 2.4e-06,
+       "lo": 1.68e-06,
+       "hi": 3.12e-06,
+       "source": "roofline"
+      },
+      "ii_s": 2.4e-06,
+      "resources": {
+       "lut": 2012,
+       "ff": 3018,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n4",
+    "sw": {
+     "time_s": {
+      "value": 0.0002,
+      "lo": 0.0001,
+      "hi": 0.0003,
+      "source": "library_default"
+     }
+    }
+   }
+  ],
+  "edges": []
+ }
+}

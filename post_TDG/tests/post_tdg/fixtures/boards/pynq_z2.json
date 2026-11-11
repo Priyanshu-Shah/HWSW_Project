@@ -1,0 +1,27 @@
+{
+  "id": "pynq_z2",
+  "name": "PYNQ-Z2 (test fixture)",
+  "summary": "Zynq-7020: 2x Cortex-A9 @ 650 MHz, 53k LUT, 220 DSP",
+  "cpu": {
+    "name": "cortex-a9", "cores": 2, "freq_hz": 6.5e8,
+    "ops_per_cycle": {"int8": 16, "uint8": 16, "int16": 8, "int32": 4, "fp16": 0, "fp32": 2},
+    "efficiency": 0.25,
+    "provenance": {"source": "estimated", "url": "", "note": "fixture values, not authoritative"}
+  },
+  "fpga": {
+    "part": "xc7z020clg400-1", "fclk_hz": 1.0e8,
+    "capacity": {"lut": 53200, "ff": 106400, "dsp": 220, "bram18k": 280, "uram": 0},
+    "provenance": {"source": "datasheet", "url": "", "note": "fixture values, not authoritative"}
+  },
+  "dram": {
+    "bytes": 536870912, "bandwidth_Bps": 3.0e9,
+    "provenance": {"source": "estimated", "url": "", "note": "fixture values, not authoritative"}
+  },
+  "interfaces": {
+    "default": "axi_hp0",
+    "axi_hp0": {
+      "bandwidth_Bps": 8.0e8, "setup_s": 2.0e-5, "note": "AXI HP0, DMA",
+      "provenance": {"source": "estimated", "url": "", "note": "fixture values, not authoritative"}
+    }
+  }
+}

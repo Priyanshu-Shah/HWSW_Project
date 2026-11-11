@@ -1,0 +1,95 @@
+{
+  "id": "t06_aes_stream",
+  "title": "AES-128 encryption of a 1 Gb/s stream",
+  "task": "Encrypt a 1 Gb/s network stream with AES-128 in CTR mode on a KV260, in 1 MiB chunks.",
+  "answers": [
+    {
+      "keywords": [
+        "chunk",
+        "packet",
+        "block size",
+        "buffer"
+      ],
+      "answer": "1 MiB"
+    },
+    {
+      "keywords": [
+        "mode",
+        "ctr",
+        "cbc",
+        "gcm"
+      ],
+      "answer": "CTR"
+    },
+    {
+      "keywords": [
+        "key"
+      ],
+      "answer": "one 128-bit key per session, set once"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness",
+        "line rate",
+        "keep up"
+      ],
+      "answer": "hard"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "kv260"
+    }
+  ],
+  "expected": {
+    "platform": "kv260",
+    "arrival_kind": "streaming",
+    "hardness": "hard",
+    "deadline_s": 0.008388608
+  },
+  "roles": {
+    "n1": [
+      "key",
+      "expansion",
+      "schedule",
+      "round"
+    ],
+    "n2": [
+      "receive",
+      "read",
+      "input",
+      "capture",
+      "rx",
+      "network"
+    ],
+    "n3": [
+      "aes",
+      "encrypt",
+      "cipher",
+      "ctr",
+      "round"
+    ],
+    "n4": [
+      "send",
+      "write",
+      "output",
+      "transmit",
+      "tx",
+      "network"
+    ]
+  }
+}

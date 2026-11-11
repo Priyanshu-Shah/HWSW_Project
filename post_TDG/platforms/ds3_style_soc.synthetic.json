@@ -1,0 +1,18 @@
+{
+  "schema_version": "0.1.0",
+  "id": "ds3_style_soc",
+  "name": "DS3-style heterogeneous SoC (synthetic)",
+  "description": "One big core, one LITTLE core, an FFT accelerator and a scrambler/encoder accelerator on a shared bus, in the spirit of the DS3 simulator platforms (https://arxiv.org/pdf/2003.09016). Not the DS3 configuration and not a real device.",
+  "provenance": {"kind": "synthetic", "source": "hand-written placeholders"},
+  "pes": [
+    {"id": "big0", "type": "cpu.big", "kind": "cpu", "concurrency": "exclusive", "static_power_mw": 100},
+    {"id": "little0", "type": "cpu.little", "kind": "cpu", "concurrency": "exclusive", "static_power_mw": 30},
+    {"id": "fft0", "type": "acc.fft", "kind": "accelerator", "concurrency": "exclusive", "static_power_mw": 20},
+    {"id": "scr0", "type": "acc.scrambler_encoder", "kind": "accelerator", "concurrency": "exclusive", "static_power_mw": 10}
+  ],
+  "interfaces": [
+    {"id": "soc_bus", "kind": "bus", "connects": ["big0", "little0", "fft0", "scr0"], "setup_us": 2,
+     "bandwidth_mb_s": 800, "energy_nj_per_byte": 0.3, "shared": true}
+  ],
+  "budgets": {}
+}

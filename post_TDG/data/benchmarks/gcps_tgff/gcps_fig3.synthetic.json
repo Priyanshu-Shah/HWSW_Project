@@ -1,0 +1,126 @@
+{
+ "name": "gcps_fig3",
+ "provenance": {
+  "kind": "synthetic",
+  "source": "Zheng 2021 Fig. 3 / Table 1 worked example (values from the paper)"
+ },
+ "model": "GCPS model (Zheng, Liang & Xiong, DAES 25, 2021): one CPU runs SW tasks sequentially; every HW task has its own unit; one shared bus carries data between tasks on different sides (same-side edges cost 0); total HW area <= C. Schedule length by LSSP (paper Alg. 1). AR = all_sw_time / schedule length. Costs in ns.",
+ "comm_class": null,
+ "comm_range_ns": null,
+ "ap": null,
+ "n": 11,
+ "area_budget_C": 18.0,
+ "all_sw_time": 83.0,
+ "sw_time": [
+  4.0,
+  5.0,
+  4.0,
+  5.0,
+  3.0,
+  16.0,
+  3.0,
+  4.0,
+  14.0,
+  5.0,
+  20.0
+ ],
+ "hw_time": [
+  2.0,
+  3.0,
+  1.0,
+  2.0,
+  1.0,
+  10.0,
+  2.0,
+  2.0,
+  7.0,
+  2.0,
+  9.0
+ ],
+ "area": [
+  4.0,
+  2.0,
+  4.0,
+  7.0,
+  5.0,
+  3.0,
+  4.0,
+  2.0,
+  3.0,
+  5.0,
+  5.0
+ ],
+ "edges": [
+  [
+   0,
+   3,
+   1.0
+  ],
+  [
+   1,
+   3,
+   2.0
+  ],
+  [
+   1,
+   4,
+   2.0
+  ],
+  [
+   2,
+   4,
+   1.0
+  ],
+  [
+   3,
+   5,
+   4.0
+  ],
+  [
+   3,
+   6,
+   1.0
+  ],
+  [
+   4,
+   7,
+   1.0
+  ],
+  [
+   4,
+   8,
+   2.0
+  ],
+  [
+   5,
+   9,
+   3.0
+  ],
+  [
+   6,
+   9,
+   1.0
+  ],
+  [
+   7,
+   10,
+   1.0
+  ],
+  [
+   8,
+   10,
+   2.0
+  ]
+ ],
+ "reference": {
+  "greedy_hgp_hw_tasks": [
+   1,
+   5,
+   7,
+   8,
+   10
+  ],
+  "greedy_hgp_schedule_length": 35.0,
+  "paper_table1_schedule_length": 32
+ }
+}

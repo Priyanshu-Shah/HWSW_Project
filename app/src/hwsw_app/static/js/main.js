@@ -9,7 +9,7 @@ import { renderNodeDetails } from "./node_details.js";
 import { enableSplitter } from "./splitter.js";
 
 const $ = (id) => document.getElementById(id);
-const state = { tdg: null };
+const state = { tdg: null, partition: null };
 
 const graphView = new GraphView($("graph"), selectNode);
 new ChatPanel({
@@ -40,10 +40,14 @@ enableSplitter({
 /** Make `tdg` the current graph. `keepResults` is true when it is the costed version of the same graph. */
 function showTdg(tdg, { keepResults = false } = {}) {
   state.tdg = tdg;
+  state.partition = null;
   graphView.show(tdg);
+  showPartitionLegend(false);
+  renderPartition(null);
   $("empty-graph").hidden = true;
   $("json-view").textContent = JSON.stringify(tdg, null, 2);
   for (const id of ["validate", "cost", "download"]) $(id).disabled = false;
+  $("partition-button").disabled = !tdg.costs;
   selectNode(null);
   if (!keepResults) {
     setStatus("");
@@ -84,6 +88,21 @@ $("cost").addEventListener("click", () =>
       setStatus("Costing found problems.", "error");
       switchTab("issues");
     }
+  }));
+
+$("partition-button").addEventListener("click", () =>
+  guarded(async () => {
+    const response = await api.partition(state.tdg);
+    if (response.result === null) {
+      setStatus(`No partition: ${response.error}`, "error");
+      return;
+    }
+    state.partition = response.result;
+    graphView.show(state.tdg, state.partition);
+    showPartitionLegend(true);
+    renderPartition(response);
+    setStatus(response.result.feasible ? "Partitioned." : "Partitioned: the deadline cannot be met.",
+      response.result.feasible ? "ok" : "error");
   }));
 
 $("download").addEventListener("click", () => {
@@ -151,6 +170,21 @@ function renderBounds(bounds) {
     panel.append(el("ul", {}, ...bounds.warnings.map((warning) => el("li", {}, warning))));
   }
   panel.classList.toggle("warn", bounds.warnings.length > 0);
+}
+
+function renderPartition(response) {
+  const panel = $("partition");
+  panel.hidden = response === null;
+  if (response === null) return;
+  clear(panel);
+  panel.append(el("p", {}, el("strong", {}, "Partition")));
+  for (const line of response.summary) panel.append(el("p", {}, line));
+  panel.classList.toggle("warn", !response.result.feasible);
+}
+
+function showPartitionLegend(partitioned) {
+  $("legend").hidden = partitioned;
+  $("legend-partition").hidden = !partitioned;
 }
 
 // ---- start-up ---------------------------------------------------------------------------

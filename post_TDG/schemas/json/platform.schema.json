@@ -1,0 +1,282 @@
+{
+  "$defs": {
+    "Interface": {
+      "additionalProperties": false,
+      "description": "A link between PEs. Transfer time = setup_us / 1000 + bytes / (bandwidth_mb_s * 1e3) ms.",
+      "properties": {
+        "bandwidth_mb_s": {
+          "description": "1 MB = 1e6 bytes.",
+          "exclusiveMinimum": 0,
+          "title": "Bandwidth Mb S",
+          "type": "number"
+        },
+        "connects": {
+          "description": "Any pair of these PEs can communicate over it.",
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Connects",
+          "type": "array"
+        },
+        "energy_nj_per_byte": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Energy Nj Per Byte",
+          "type": "number"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "shared_memory",
+            "axi_lite",
+            "axi_stream",
+            "axi_hp",
+            "axi_dma",
+            "pcie",
+            "noc",
+            "bus",
+            "other"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "setup_us": {
+          "minimum": 0,
+          "title": "Setup Us",
+          "type": "number"
+        },
+        "shared": {
+          "default": true,
+          "description": "Transfers are serialised (bus contention) when true.",
+          "title": "Shared",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "connects",
+        "setup_us",
+        "bandwidth_mb_s"
+      ],
+      "title": "Interface",
+      "type": "object"
+    },
+    "PE": {
+      "additionalProperties": false,
+      "description": "A processing element.\n\nconcurrency = exclusive: runs one task at a time (CPU core, fixed-function accelerator).\nconcurrency = spatial: each mapped task gets its own hardware and tasks run concurrently, limited by\n`capacity` (FPGA fabric).",
+      "properties": {
+        "capacity": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "e.g. LUT, FF, DSP, BRAM18K, mem_bytes.",
+          "title": "Capacity",
+          "type": "object"
+        },
+        "concurrency": {
+          "enum": [
+            "exclusive",
+            "spatial"
+          ],
+          "title": "Concurrency",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "cpu",
+            "fpga",
+            "gpu",
+            "npu",
+            "dsp",
+            "accelerator"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "static_power_mw": {
+          "default": 0.0,
+          "description": "Charged for the whole iteration on every allowed PE.",
+          "minimum": 0,
+          "title": "Static Power Mw",
+          "type": "number"
+        },
+        "type": {
+          "description": "Matched against Implementation.pe_type.",
+          "title": "Type",
+          "type": "string"
+        },
+        "usd": {
+          "default": 0.0,
+          "description": "Cost incurred if any task is mapped to this PE.",
+          "minimum": 0,
+          "title": "Usd",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "kind",
+        "concurrency"
+      ],
+      "title": "PE",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "description": "Where a number (or a whole file) comes from. `synthetic` must also appear in the file name.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "synthetic",
+            "measured",
+            "datasheet",
+            "estimated",
+            "derived",
+            "mixed"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "source": {
+          "description": "Citation, URL or short description of the origin.",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "source"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "$id": "platform.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "budgets": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Board-level budgets, e.g. usd, power_mw.",
+      "title": "Budgets",
+      "type": "object"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "interfaces": {
+      "items": {
+        "$ref": "#/$defs/Interface"
+      },
+      "title": "Interfaces",
+      "type": "array"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Name"
+    },
+    "pes": {
+      "items": {
+        "$ref": "#/$defs/PE"
+      },
+      "minItems": 1,
+      "title": "Pes",
+      "type": "array"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "schema_version": {
+      "const": "0.1.0",
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "provenance",
+    "pes"
+  ],
+  "title": "Platform",
+  "type": "object"
+}

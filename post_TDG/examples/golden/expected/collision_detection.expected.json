@@ -1,0 +1,22 @@
+{
+  "_note": "Regression snapshot of our own solver on SYNTHETIC inputs. Not hardware measurements.",
+  "graph": "collision_detection.synthetic.json",
+  "solver": "ilp-highs",
+  "loop": "none",
+  "feasible": true,
+  "mapping": {
+    "capture": "cpu0/sw",
+    "preprocess": "fpga0/hw",
+    "detect": "fpga0/hw",
+    "flow": "cpu0/sw",
+    "track": "cpu0/sw",
+    "ttc": "cpu0/sw"
+  },
+  "lower_bound_latency_ms": 23.9096,
+  "latency_ms_nominal": 27.023306666666667,
+  "latency_ms_p95": 31.55188269690869,
+  "energy_mj_nominal": 48.18624533333334,
+  "feasible_fraction": 0.87,
+  "n_samples": 200,
+  "seed": 0
+}

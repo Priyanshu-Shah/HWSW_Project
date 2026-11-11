@@ -29,6 +29,7 @@ export const api = {
   example: (name) => getJson(`/api/examples/${encodeURIComponent(name)}`),
   validate: (tdg) => postJson("/api/tdg/validate", { tdg }),
   cost: (tdg) => postJson("/api/tdg/cost", { tdg }),
+  partition: (tdg) => postJson("/api/tdg/partition", { tdg }),
   createSession: () => postJson("/api/chat/sessions", {}).then((body) => body.session_id),
 };
 

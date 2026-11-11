@@ -1,0 +1,46 @@
+[
+  {
+    "task": "t06_aes_stream",
+    "model": "gpt-oss:120b",
+    "run_dir": "/home/roboticsiitj/Desktop/HWSW_Project-main/pre_TDG/runs/20261107_071355_bench_t06_aes_stream",
+    "minutes": 4.92,
+    "question_rounds": 1,
+    "questions": 2,
+    "error": null,
+    "llm_calls": 11,
+    "tool_calls": 1,
+    "prompt_tokens": 27100,
+    "output_tokens": 6209,
+    "spec": {
+      "platform_ok": true,
+      "arrival_ok": true,
+      "hardness_ok": true,
+      "deadline_ok": true,
+      "assumptions": 6,
+      "web_sources": 0
+    },
+    "tdg": {
+      "valid": true,
+      "nodes": 6,
+      "reference_nodes": 4,
+      "node_f1": 0.8,
+      "edge_f1": 1.0,
+      "edge_bytes_within_2x": 1.0,
+      "matches": {
+        "n3": "n4",
+        "n1": "n2",
+        "n4": "n6",
+        "n2": "n1"
+      },
+      "total_ops_ratio": 0.021,
+      "node_ops_within_2x": 0.5,
+      "all_software_ratio": 0.126,
+      "best_case_ratio": 0.681,
+      "all_software_s": 0.0011564083,
+      "best_case_s": 0.0011564083,
+      "bounds_warnings": [
+        "hardware cannot improve latency by more than 5%; check the graph and the costs"
+      ]
+    }
+  }
+]

@@ -1,0 +1,63 @@
+{
+  "$id": "ranking.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Relative metric: candidates ordered by nominal objective, with order stability under uncertainty.",
+  "properties": {
+    "candidates": {
+      "description": "Labels, best first (nominal objective).",
+      "items": {
+        "type": "string"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "mean_kendall_tau": {
+      "description": "Mean Kendall tau-b between each sample's ordering and nominal.",
+      "title": "Mean Kendall Tau",
+      "type": "number"
+    },
+    "n_samples": {
+      "title": "N Samples",
+      "type": "integer"
+    },
+    "objective_nominal": {
+      "items": {
+        "type": "number"
+      },
+      "title": "Objective Nominal",
+      "type": "array"
+    },
+    "order_preserved_fraction": {
+      "description": "Fraction of samples whose full ordering equals nominal.",
+      "title": "Order Preserved Fraction",
+      "type": "number"
+    },
+    "pairwise_confidence": {
+      "description": "[i][j] = fraction of samples where candidate i is strictly better than j (i before j).",
+      "items": {
+        "items": {
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "title": "Pairwise Confidence",
+      "type": "array"
+    },
+    "seed": {
+      "title": "Seed",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "candidates",
+    "objective_nominal",
+    "pairwise_confidence",
+    "order_preserved_fraction",
+    "mean_kendall_tau",
+    "n_samples",
+    "seed"
+  ],
+  "title": "Ranking",
+  "type": "object"
+}

@@ -21,8 +21,9 @@ export class GraphView {
     });
   }
 
-  show(tdg) {
-    const { nodes, edges } = buildElements(tdg);
+  /** `partition` (optional): post_TDG's result, to colour each node by where it runs. */
+  show(tdg, partition = null) {
+    const { nodes, edges } = buildElements(tdg, partition);
     this.cy.elements().remove();
     this.cy.add([...nodes, ...edges]);
     this.cy
@@ -67,6 +68,14 @@ function graphStyle() {
     { selector: 'node[affinity = "sw_only"]', style: { "background-color": color("--node-sw") } },
     { selector: 'node[affinity = "hw_only"]', style: { "background-color": color("--node-hw") } },
     { selector: 'node[phase = "setup"]', style: { "border-style": "dashed" } },
+    {
+      selector: 'node[target = "sw"]',
+      style: { "background-color": color("--node-sw"), "border-width": 3, "border-color": color("--node-sw-strong") },
+    },
+    {
+      selector: 'node[target = "hw"]',
+      style: { "background-color": color("--node-hw"), "border-width": 3, "border-color": color("--node-hw-strong") },
+    },
     {
       selector: "node:selected",
       style: { "border-width": 3, "border-color": color("--accent") },

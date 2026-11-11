@@ -1,0 +1,57 @@
+{
+  "schema_version": "0.1.0",
+  "id": "wifi_tx",
+  "name": "WiFi-TX chain, DS3-style (synthetic costs)",
+  "description": "scrambler -> encoder -> interleaver -> qpsk_mod -> pilot_insert -> ifft -> cyclic_prefix for one frame. Task list follows the WiFi-TX application used in DS3 (https://arxiv.org/pdf/2003.09016); costs are invented.",
+  "provenance": {
+    "kind": "synthetic",
+    "source": "hand-written golden example",
+    "notes": "Costs are placeholders that scale with payload size, NOT measurements or DS3 profiles."
+  },
+  "workload": {"n_bits": 6000},
+  "arrival": {"kind": "periodic", "period_ms": 10},
+  "constraints": {"deadline_ms": 10},
+  "objective": {"weights": {"latency": 1.0, "energy": 0.5}},
+  "platform": {"id": "ds3_style_soc", "path": "../../platforms/ds3_style_soc.synthetic.json"},
+  "nodes": [
+    {"id": "scrambler", "implementations": [
+      {"id": "big", "pe_type": "cpu.big", "cost": {"time_ms": {"expr": "2.0e-4 * n_bits", "unc": [0.9, 1.2]}, "power_mw": 800}},
+      {"id": "little", "pe_type": "cpu.little", "cost": {"time_ms": {"expr": "5.0e-4 * n_bits", "unc": [0.9, 1.2]}, "power_mw": 150}},
+      {"id": "acc", "pe_type": "acc.scrambler_encoder", "cost": {"time_ms": "2.0e-5 * n_bits", "power_mw": 40}}
+    ]},
+    {"id": "encoder", "name": "Convolutional encoder, rate 1/2", "implementations": [
+      {"id": "big", "pe_type": "cpu.big", "cost": {"time_ms": {"expr": "4.0e-4 * n_bits", "unc": [0.9, 1.2]}, "power_mw": 800}},
+      {"id": "little", "pe_type": "cpu.little", "cost": {"time_ms": {"expr": "1.0e-3 * n_bits", "unc": [0.9, 1.2]}, "power_mw": 150}},
+      {"id": "acc", "pe_type": "acc.scrambler_encoder", "cost": {"time_ms": "3.0e-5 * n_bits", "power_mw": 40}}
+    ]},
+    {"id": "interleaver", "implementations": [
+      {"id": "big", "pe_type": "cpu.big", "cost": {"time_ms": {"expr": "3.0e-4 * n_bits", "unc": [0.9, 1.3]}, "power_mw": 800}},
+      {"id": "little", "pe_type": "cpu.little", "cost": {"time_ms": {"expr": "7.5e-4 * n_bits", "unc": [0.9, 1.3]}, "power_mw": 150}}
+    ]},
+    {"id": "qpsk_mod", "implementations": [
+      {"id": "big", "pe_type": "cpu.big", "cost": {"time_ms": {"expr": "2.5e-4 * n_bits", "unc": [0.9, 1.3]}, "power_mw": 800}},
+      {"id": "little", "pe_type": "cpu.little", "cost": {"time_ms": {"expr": "6.0e-4 * n_bits", "unc": [0.9, 1.3]}, "power_mw": 150}}
+    ]},
+    {"id": "pilot_insert", "implementations": [
+      {"id": "big", "pe_type": "cpu.big", "cost": {"time_ms": {"expr": "0.02 * ceil(2 * n_bits / 96)", "unc": [0.9, 1.3]}, "power_mw": 800}},
+      {"id": "little", "pe_type": "cpu.little", "cost": {"time_ms": {"expr": "0.05 * ceil(2 * n_bits / 96)", "unc": [0.9, 1.3]}, "power_mw": 150}}
+    ]},
+    {"id": "ifft", "name": "64-point IFFT per OFDM symbol", "implementations": [
+      {"id": "big", "pe_type": "cpu.big", "cost": {"time_ms": {"expr": "0.02 * ceil(2 * n_bits / 96)", "unc": [0.9, 1.2]}, "power_mw": 900}},
+      {"id": "little", "pe_type": "cpu.little", "cost": {"time_ms": {"expr": "0.05 * ceil(2 * n_bits / 96)", "unc": [0.9, 1.2]}, "power_mw": 160}},
+      {"id": "acc", "pe_type": "acc.fft", "cost": {"time_ms": {"expr": "0.0016 * ceil(2 * n_bits / 96)", "unc": [0.95, 1.1]}, "power_mw": 60}}
+    ]},
+    {"id": "cyclic_prefix", "implementations": [
+      {"id": "big", "pe_type": "cpu.big", "cost": {"time_ms": {"expr": "0.008 * ceil(2 * n_bits / 96)", "unc": [0.9, 1.3]}, "power_mw": 800}},
+      {"id": "little", "pe_type": "cpu.little", "cost": {"time_ms": {"expr": "0.02 * ceil(2 * n_bits / 96)", "unc": [0.9, 1.3]}, "power_mw": 150}}
+    ]}
+  ],
+  "edges": [
+    {"src": "scrambler", "dst": "encoder", "bytes": "n_bits / 8"},
+    {"src": "encoder", "dst": "interleaver", "bytes": "2 * n_bits / 8"},
+    {"src": "interleaver", "dst": "qpsk_mod", "bytes": "2 * n_bits / 8"},
+    {"src": "qpsk_mod", "dst": "pilot_insert", "bytes": "8 * n_bits"},
+    {"src": "pilot_insert", "dst": "ifft", "bytes": "8 * 64 * ceil(2 * n_bits / 96)"},
+    {"src": "ifft", "dst": "cyclic_prefix", "bytes": "8 * 64 * ceil(2 * n_bits / 96)"}
+  ]
+}

@@ -1,0 +1,886 @@
+{
+  "$defs": {
+    "AlternativeInfo": {
+      "additionalProperties": false,
+      "description": "Marks this graph as one of several whole-application alternatives from task generation.",
+      "properties": {
+        "group": {
+          "title": "Group",
+          "type": "string"
+        },
+        "variant": {
+          "title": "Variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "group",
+        "variant"
+      ],
+      "title": "AlternativeInfo",
+      "type": "object"
+    },
+    "Arrival": {
+      "additionalProperties": false,
+      "description": "How iterations arrive. periodic: each iteration must finish within the period.\nstreaming: iterations are pipelined; only the initiation interval must fit in the period.",
+      "properties": {
+        "buffers": {
+          "default": 2,
+          "description": "Streaming: frames of buffering per same-frame edge (2 = double buffering).",
+          "minimum": 1,
+          "title": "Buffers",
+          "type": "integer"
+        },
+        "kind": {
+          "default": "one_shot",
+          "enum": [
+            "one_shot",
+            "periodic",
+            "streaming"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "period_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Period Ms"
+        }
+      },
+      "title": "Arrival",
+      "type": "object"
+    },
+    "Constraints": {
+      "additionalProperties": false,
+      "properties": {
+        "deadline_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "End-to-end latency bound per iteration.",
+          "title": "Deadline Ms"
+        },
+        "energy_mj_max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Energy bound per iteration.",
+          "title": "Energy Mj Max"
+        },
+        "power_mw_max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Average power bound.",
+          "title": "Power Mw Max"
+        },
+        "usd_max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usd Max"
+        }
+      },
+      "title": "Constraints",
+      "type": "object"
+    },
+    "Cost": {
+      "additionalProperties": false,
+      "description": "Cost of running one implementation of a node once (one graph iteration).",
+      "properties": {
+        "energy_mj": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "expr": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "unc": {
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "prefixItems": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "expr"
+                  ],
+                  "type": "object"
+                }
+              ],
+              "description": "Number, expression string over workload parameters, or {expr, unc}."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dynamic energy per run. Overrides power_mw."
+        },
+        "ii_ms": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "expr": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "unc": {
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "prefixItems": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "expr"
+                  ],
+                  "type": "object"
+                }
+              ],
+              "description": "Number, expression string over workload parameters, or {expr, unc}."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Initiation interval when pipelined on spatial hardware. Defaults to time_ms."
+        },
+        "power_mw": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "expr": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "unc": {
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "prefixItems": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "expr"
+                  ],
+                  "type": "object"
+                }
+              ],
+              "description": "Number, expression string over workload parameters, or {expr, unc}."
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dynamic power while running; energy = power * time."
+        },
+        "resources": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "expr": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "unc": {
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "expr"
+                ],
+                "type": "object"
+              }
+            ],
+            "description": "Number, expression string over workload parameters, or {expr, unc}."
+          },
+          "description": "Resource use on the PE, e.g. LUT, FF, DSP, BRAM18K, mem_bytes, usd.",
+          "title": "Resources",
+          "type": "object"
+        },
+        "time_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "expr": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  ]
+                },
+                "unc": {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array"
+                }
+              },
+              "required": [
+                "expr"
+              ],
+              "type": "object"
+            }
+          ],
+          "description": "Number, expression string over workload parameters, or {expr, unc}."
+        }
+      },
+      "required": [
+        "time_ms"
+      ],
+      "title": "Cost",
+      "type": "object"
+    },
+    "Edge": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "expr": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  ]
+                },
+                "unc": {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array"
+                }
+              },
+              "required": [
+                "expr"
+              ],
+              "type": "object"
+            }
+          ],
+          "description": "Data moved per iteration; communication time comes from the platform."
+        },
+        "distance": {
+          "default": 0,
+          "description": "Iteration distance: 0 = same frame (precedence); k > 0 = dst of frame i+k uses src of frame i (state carried across frames, e.g. a tracker). Distance > 0 edges may form cycles, including self-loops; they matter for streaming throughput, not for one iteration's schedule.",
+          "minimum": 0,
+          "title": "Distance",
+          "type": "integer"
+        },
+        "dst": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Dst",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "src": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Src",
+          "type": "string"
+        }
+      },
+      "required": [
+        "src",
+        "dst",
+        "bytes"
+      ],
+      "title": "Edge",
+      "type": "object"
+    },
+    "Implementation": {
+      "additionalProperties": false,
+      "description": "One way to run a node: a PE type plus its cost. Several per node = multiple-choice partitioning.",
+      "properties": {
+        "cost": {
+          "$ref": "#/$defs/Cost"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "pe_type": {
+          "description": "Matched against Platform PE.type.",
+          "title": "Pe Type",
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "pe_type",
+        "cost"
+      ],
+      "title": "Implementation",
+      "type": "object"
+    },
+    "Node": {
+      "additionalProperties": false,
+      "properties": {
+        "deadline_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Finish deadline relative to iteration start.",
+          "title": "Deadline Ms"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "implementations": {
+          "items": {
+            "$ref": "#/$defs/Implementation"
+          },
+          "minItems": 1,
+          "title": "Implementations",
+          "type": "array"
+        },
+        "level": {
+          "default": "task",
+          "enum": [
+            "application",
+            "task",
+            "function",
+            "loop",
+            "basic_block"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "pinned_pe": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fixed upstream decision: node must run on this PE.",
+          "title": "Pinned Pe"
+        },
+        "subgraph": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SubGraph"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Refinement of this node. Phase 0 solvers treat the node as atomic."
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "implementations"
+      ],
+      "title": "Node",
+      "type": "object"
+    },
+    "Objective": {
+      "additionalProperties": false,
+      "description": "Weighted sum of metrics, each normalised by its lower bound before weighting.",
+      "properties": {
+        "weights": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "propertyNames": {
+            "enum": [
+              "latency",
+              "energy",
+              "usd"
+            ]
+          },
+          "title": "Weights",
+          "type": "object"
+        }
+      },
+      "title": "Objective",
+      "type": "object"
+    },
+    "PlatformRef": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_pes": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 128,
+                "minLength": 1,
+                "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Subset of PEs this case study may use.",
+          "title": "Allowed Pes"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Path to the platform JSON, relative to this file.",
+          "title": "Path"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "PlatformRef",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "description": "Where a number (or a whole file) comes from. `synthetic` must also appear in the file name.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "synthetic",
+            "measured",
+            "datasheet",
+            "estimated",
+            "derived",
+            "mixed"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "source": {
+          "description": "Citation, URL or short description of the origin.",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "source"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "SubGraph": {
+      "additionalProperties": false,
+      "properties": {
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "title": "Edges",
+          "type": "array"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/Node"
+          },
+          "minItems": 1,
+          "title": "Nodes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "nodes"
+      ],
+      "title": "SubGraph",
+      "type": "object"
+    }
+  },
+  "$id": "ir.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "alternative": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AlternativeInfo"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "arrival": {
+      "$ref": "#/$defs/Arrival"
+    },
+    "constraints": {
+      "$ref": "#/$defs/Constraints"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "edges": {
+      "items": {
+        "$ref": "#/$defs/Edge"
+      },
+      "title": "Edges",
+      "type": "array"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.\\-]*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Name"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/Node"
+      },
+      "minItems": 1,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "objective": {
+      "$ref": "#/$defs/Objective"
+    },
+    "platform": {
+      "$ref": "#/$defs/PlatformRef"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "schema_version": {
+      "const": "0.1.0",
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "workload": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Parameters that costs are functions of.",
+      "title": "Workload",
+      "type": "object"
+    }
+  },
+  "required": [
+    "id",
+    "provenance",
+    "platform",
+    "nodes"
+  ],
+  "title": "TaskGraph",
+  "type": "object"
+}

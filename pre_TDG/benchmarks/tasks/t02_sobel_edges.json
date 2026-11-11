@@ -1,0 +1,102 @@
+{
+  "id": "t02_sobel_edges",
+  "title": "Sobel edge detection, 1080p @ 60 fps",
+  "task": "Sobel edge detection on a 1080p video stream at 60 fps on the Kria KV260.",
+  "answers": [
+    {
+      "keywords": [
+        "data type",
+        "precision",
+        "dtype",
+        "bit",
+        "pixel format"
+      ],
+      "answer": "uint8"
+    },
+    {
+      "keywords": [
+        "threshold",
+        "binar"
+      ],
+      "answer": "yes, a fixed threshold on the gradient magnitude"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness"
+      ],
+      "answer": "hard"
+    },
+    {
+      "keywords": [
+        "color",
+        "colour",
+        "gray",
+        "channel"
+      ],
+      "answer": "RGB input, converted to grayscale"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "kv260"
+    }
+  ],
+  "expected": {
+    "platform": "kv260",
+    "arrival_kind": "streaming",
+    "hardness": "hard",
+    "deadline_s": 0.016666666666666666
+  },
+  "roles": {
+    "n1": [
+      "capture",
+      "camera",
+      "acquire",
+      "grab",
+      "read",
+      "input"
+    ],
+    "n2": [
+      "gray",
+      "grey",
+      "luma",
+      "color",
+      "colour",
+      "convert"
+    ],
+    "n3": [
+      "sobel",
+      "gradient",
+      "edge",
+      "convolution",
+      "filter",
+      "magnitude"
+    ],
+    "n4": [
+      "threshold",
+      "binar",
+      "mask"
+    ],
+    "n5": [
+      "output",
+      "write",
+      "display",
+      "store",
+      "send"
+    ]
+  }
+}

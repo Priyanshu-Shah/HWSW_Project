@@ -1,0 +1,97 @@
+[
+  {
+    "task": "t01_object_detection",
+    "model": "gpt-oss:120b",
+    "run_dir": "/home/roboticsiitj/Desktop/HWSW_Project-main/pre_TDG/runs/20261107_063828_bench_t01_object_detection",
+    "minutes": 20.43,
+    "question_rounds": 1,
+    "questions": 3,
+    "error": null,
+    "llm_calls": 26,
+    "tool_calls": 8,
+    "prompt_tokens": 149477,
+    "output_tokens": 25041,
+    "spec": {
+      "platform_ok": true,
+      "arrival_ok": true,
+      "hardness_ok": true,
+      "deadline_ok": true,
+      "assumptions": 8,
+      "web_sources": 1
+    },
+    "tdg": {
+      "valid": true,
+      "nodes": 8,
+      "reference_nodes": 13,
+      "node_f1": 0.762,
+      "edge_f1": 1.0,
+      "edge_bytes_within_2x": 0.333,
+      "matches": {
+        "n6": "n4",
+        "n12": "n8",
+        "n7": "n5",
+        "n2": "n2",
+        "n10": "n7",
+        "n8": "n6",
+        "n4": "n3",
+        "n1": "n1"
+      },
+      "total_ops_ratio": 1.871,
+      "node_ops_within_2x": 0.75,
+      "all_software_ratio": 3.207,
+      "best_case_ratio": 12.769,
+      "all_software_s": 1.410335833,
+      "best_case_s": 1.263892433,
+      "bounds_warnings": [
+        "no partition can meet the deadline: even with every node on its fastest option and no communication, latency is at least 884 ms (deadline 33.3 ms)"
+      ]
+    }
+  },
+  {
+    "task": "t03_image_classification",
+    "model": "gpt-oss:120b",
+    "run_dir": "/home/roboticsiitj/Desktop/HWSW_Project-main/pre_TDG/runs/20261107_065853_bench_t03_image_classification",
+    "minutes": 14.87,
+    "question_rounds": 2,
+    "questions": 3,
+    "error": null,
+    "llm_calls": 31,
+    "tool_calls": 10,
+    "prompt_tokens": 124160,
+    "output_tokens": 16957,
+    "spec": {
+      "platform_ok": true,
+      "arrival_ok": true,
+      "hardness_ok": true,
+      "deadline_ok": true,
+      "assumptions": 6,
+      "web_sources": 0
+    },
+    "tdg": {
+      "valid": true,
+      "nodes": 11,
+      "reference_nodes": 12,
+      "node_f1": 0.783,
+      "edge_f1": 1.0,
+      "edge_bytes_within_2x": 0.667,
+      "matches": {
+        "n12": "n11",
+        "n9": "n8",
+        "n1": "n1",
+        "n2": "n2",
+        "n10": "n9",
+        "n5": "n5",
+        "n6": "n6",
+        "n8": "n7",
+        "n11": "n10"
+      },
+      "total_ops_ratio": 1.037,
+      "node_ops_within_2x": 0.556,
+      "all_software_ratio": 1.001,
+      "best_case_ratio": 1.284,
+      "all_software_s": 0.11806318594999998,
+      "best_case_s": 0.041753665950000005,
+      "bounds_warnings": []
+    }
+  }
+]

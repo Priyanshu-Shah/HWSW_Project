@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1.0",
+  "id": "zynq7020_class",
+  "name": "Zynq-7020-class CPU + FPGA board (synthetic placeholders)",
+  "description": "Dual Cortex-A9 + XC7Z020 fabric, as on Pynq-Z1. Fabric capacities are datasheet values; interface, power and cost numbers are synthetic placeholders until measured.",
+  "provenance": {
+    "kind": "mixed",
+    "source": "fpga0.capacity: Xilinx 7-series datasheet (DS190) values for XC7Z020, identical to QuickEst *_avail columns for Device_Index 1 (docs/data_cards/quickest.md). Everything else: synthetic.",
+    "notes": "Replace interface and power numbers with measurements (e.g. Kroh & Diessel FPT'18 model, https://cgi.cse.unsw.edu.au/~odiessel/papers/fpt18kroh.pdf)."
+  },
+  "pes": [
+    {"id": "cpu0", "type": "cpu.cortex_a9", "kind": "cpu", "concurrency": "exclusive", "static_power_mw": 150,
+     "capacity": {"mem_bytes": 268435456},
+     "provenance": {"kind": "synthetic", "source": "placeholder static power; 256 MiB share of DDR is an assumption"}},
+    {"id": "cpu1", "type": "cpu.cortex_a9", "kind": "cpu", "concurrency": "exclusive", "static_power_mw": 150,
+     "capacity": {"mem_bytes": 268435456},
+     "provenance": {"kind": "synthetic", "source": "placeholder static power; 256 MiB share of DDR is an assumption"}},
+    {"id": "fpga0", "type": "fpga.xc7z020", "kind": "fpga", "concurrency": "spatial", "static_power_mw": 200,
+     "capacity": {"LUT": 53200, "FF": 106400, "DSP": 220, "BRAM18K": 280},
+     "provenance": {"kind": "datasheet", "source": "Xilinx DS190 (XC7Z020); static power is a synthetic placeholder"}}
+  ],
+  "interfaces": [
+    {"id": "l2_shared", "kind": "shared_memory", "connects": ["cpu0", "cpu1"], "setup_us": 1, "bandwidth_mb_s": 1000,
+     "energy_nj_per_byte": 0.1, "shared": true,
+     "provenance": {"kind": "synthetic", "source": "placeholder"}},
+    {"id": "axi_hp_dma", "kind": "axi_dma", "connects": ["cpu0", "cpu1", "fpga0"], "setup_us": 20, "bandwidth_mb_s": 600,
+     "energy_nj_per_byte": 0.5, "shared": true,
+     "provenance": {"kind": "synthetic", "source": "placeholder, about half the theoretical 64-bit x 150 MHz HP-port rate"}}
+  ],
+  "budgets": {}
+}

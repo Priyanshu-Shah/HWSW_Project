@@ -1,0 +1,296 @@
+{
+  "graph": {
+    "id": "t05_radar_range",
+    "schema_version": "0.2",
+    "provenance": {
+      "kind": "manual",
+      "source": "benchmark reference: FFT-based radar range processing"
+    }
+  },
+  "arrival": {
+    "kind": "streaming",
+    "period_s": 0.05
+  },
+  "objective": {
+    "latency": 1.0
+  },
+  "platform": "zcu104",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "adc_capture",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.001,
+        "source": "library_default"
+      }
+    },
+    {
+      "id": "n2",
+      "name": "apply_window",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "elementwise",
+        "params": {
+          "elements": 131072,
+          "ops_per_element": 1,
+          "inputs": 2,
+          "dtype": "int16"
+        }
+      }
+    },
+    {
+      "id": "n3",
+      "name": "range_fft",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "samples": {
+            "shape": [
+              256,
+              512
+            ],
+            "dtype": "int16",
+            "dir": "in"
+          },
+          "twiddle": {
+            "shape": [
+              256,
+              2
+            ],
+            "dtype": "int16",
+            "dir": "in",
+            "const": true
+          },
+          "spectrum": {
+            "shape": [
+              256,
+              512,
+              2
+            ],
+            "dtype": "int32",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "chirp",
+            "range": 256
+          },
+          {
+            "var": "stage",
+            "range": 9
+          },
+          {
+            "var": "butterfly",
+            "range": 256
+          }
+        ],
+        "body": {
+          "mul": 4,
+          "add": 6
+        },
+        "access": {
+          "samples": {
+            "pattern": "streaming"
+          },
+          "twiddle": {
+            "pattern": "reuse",
+            "reuse": [
+              "chirp"
+            ]
+          }
+        },
+        "hints": {
+          "unrollable": [
+            "butterfly"
+          ]
+        }
+      },
+      "ops_claimed": 5898240,
+      "ops_unit": "ops"
+    },
+    {
+      "id": "n4",
+      "name": "magnitude",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "spectrum": {
+            "shape": [
+              256,
+              512,
+              2
+            ],
+            "dtype": "int32",
+            "dir": "in"
+          },
+          "power": {
+            "shape": [
+              256,
+              512
+            ],
+            "dtype": "int32",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "chirp",
+            "range": 256
+          },
+          {
+            "var": "bin",
+            "range": 512
+          }
+        ],
+        "body": {
+          "mul": 2,
+          "add": 1
+        },
+        "access": {
+          "spectrum": {
+            "pattern": "streaming"
+          }
+        }
+      },
+      "ops_claimed": 393216,
+      "ops_unit": "ops"
+    },
+    {
+      "id": "n5",
+      "name": "integrate_chirps",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "template",
+      "template": {
+        "op": "reduce",
+        "params": {
+          "elements": 131072,
+          "mode": "sum",
+          "outputs": 512,
+          "dtype": "int32"
+        }
+      }
+    },
+    {
+      "id": "n6",
+      "name": "cfar_detect",
+      "phase": "iteration",
+      "affinity": "any",
+      "kind": "loop_nest",
+      "loop_nest": {
+        "arrays": {
+          "profile": {
+            "shape": [
+              512
+            ],
+            "dtype": "int32",
+            "dir": "in"
+          },
+          "targets": {
+            "shape": [
+              64,
+              2
+            ],
+            "dtype": "int32",
+            "dir": "out"
+          }
+        },
+        "loops": [
+          {
+            "var": "cell",
+            "range": 512
+          },
+          {
+            "var": "window",
+            "range": 32
+          }
+        ],
+        "body": {
+          "add": 1,
+          "cmp": 1
+        },
+        "access": {
+          "profile": {
+            "pattern": "sliding_window",
+            "reuse": [
+              "window"
+            ]
+          }
+        },
+        "control": {
+          "branches": 1
+        }
+      },
+      "ops_claimed": 32768,
+      "ops_unit": "ops"
+    },
+    {
+      "id": "n7",
+      "name": "report_targets",
+      "phase": "iteration",
+      "affinity": "sw_only",
+      "kind": "opaque",
+      "opaque": {
+        "sw_time_s": 0.0005,
+        "source": "library_default"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "src": "n1",
+      "dst": "n2",
+      "kind": "data",
+      "bytes": 262144
+    },
+    {
+      "id": "e2",
+      "src": "n2",
+      "dst": "n3",
+      "kind": "data",
+      "bytes": 262144
+    },
+    {
+      "id": "e3",
+      "src": "n3",
+      "dst": "n4",
+      "kind": "data",
+      "bytes": 1048576
+    },
+    {
+      "id": "e4",
+      "src": "n4",
+      "dst": "n5",
+      "kind": "data",
+      "bytes": 524288
+    },
+    {
+      "id": "e5",
+      "src": "n5",
+      "dst": "n6",
+      "kind": "data",
+      "bytes": 2048
+    },
+    {
+      "id": "e6",
+      "src": "n6",
+      "dst": "n7",
+      "kind": "data",
+      "bytes": 512
+    }
+  ],
+  "constraints": {
+    "deadline_s": 0.05
+  }
+}

@@ -1,0 +1,1190 @@
+{
+ "graph": {
+  "id": "t01_object_detection",
+  "schema_version": "0.2",
+  "provenance": {
+   "kind": "manual",
+   "source": "benchmark reference: Object detection, 720p @ 30 fps"
+  }
+ },
+ "arrival": {
+  "kind": "streaming",
+  "period_s": 0.03333333333333333
+ },
+ "objective": {
+  "latency": 1.0
+ },
+ "platform": "zcu104",
+ "nodes": [
+  {
+   "id": "n1",
+   "name": "capture_frame",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 0.002,
+    "source": "library_default"
+   }
+  },
+  {
+   "id": "n2",
+   "name": "resize_letterbox",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "frame": {
+      "shape": [
+       720,
+       1280,
+       3
+      ],
+      "dtype": "uint8",
+      "dir": "in"
+     },
+     "img": {
+      "shape": [
+       640,
+       640,
+       3
+      ],
+      "dtype": "uint8",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "y",
+      "range": 640
+     },
+     {
+      "var": "x",
+      "range": 640
+     },
+     {
+      "var": "c",
+      "range": 3
+     }
+    ],
+    "body": {
+     "mac": 4
+    },
+    "access": {
+     "frame": {
+      "pattern": "sliding_window",
+      "reuse": [
+       "x"
+      ]
+     }
+    },
+    "hints": {
+     "unrollable": [
+      "c"
+     ]
+    }
+   },
+   "ops_claimed": 4915200,
+   "ops_unit": "macs"
+  },
+  {
+   "id": "n3",
+   "name": "normalize",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "elementwise",
+    "params": {
+     "elements": 1228800,
+     "ops_per_element": 1,
+     "inputs": 1,
+     "dtype": "int8"
+    }
+   }
+  },
+  {
+   "id": "n4",
+   "name": "load_weights",
+   "phase": "setup",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "memcpy",
+    "params": {
+     "bytes": 3200000
+    }
+   }
+  },
+  {
+   "id": "n5",
+   "name": "backbone_stem",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "conv2d",
+    "params": {
+     "H": 640,
+     "W": 640,
+     "C_in": 3,
+     "C_out": 32,
+     "K": 3,
+     "stride": 2,
+     "padding": 1,
+     "dtype": "int8"
+    }
+   }
+  },
+  {
+   "id": "n6",
+   "name": "backbone_p3",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "conv2d",
+    "params": {
+     "H": 320,
+     "W": 320,
+     "C_in": 32,
+     "C_out": 64,
+     "K": 3,
+     "stride": 2,
+     "padding": 1,
+     "dtype": "int8"
+    }
+   }
+  },
+  {
+   "id": "n7",
+   "name": "backbone_p4",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "conv2d",
+    "params": {
+     "H": 160,
+     "W": 160,
+     "C_in": 64,
+     "C_out": 128,
+     "K": 3,
+     "stride": 2,
+     "padding": 1,
+     "dtype": "int8"
+    }
+   }
+  },
+  {
+   "id": "n8",
+   "name": "backbone_p5",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "conv2d",
+    "params": {
+     "H": 80,
+     "W": 80,
+     "C_in": 128,
+     "C_out": 256,
+     "K": 3,
+     "stride": 2,
+     "padding": 1,
+     "dtype": "int8"
+    }
+   }
+  },
+  {
+   "id": "n9",
+   "name": "neck",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "conv2d",
+    "params": {
+     "H": 40,
+     "W": 40,
+     "C_in": 256,
+     "C_out": 256,
+     "K": 3,
+     "stride": 1,
+     "padding": 1,
+     "dtype": "int8"
+    }
+   }
+  },
+  {
+   "id": "n10",
+   "name": "detect_head",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "template",
+   "template": {
+    "op": "conv2d",
+    "params": {
+     "H": 40,
+     "W": 40,
+     "C_in": 256,
+     "C_out": 144,
+     "K": 1,
+     "stride": 1,
+     "padding": 0,
+     "dtype": "int8"
+    }
+   }
+  },
+  {
+   "id": "n11",
+   "name": "decode_boxes",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "head_out": {
+      "shape": [
+       40,
+       40,
+       144
+      ],
+      "dtype": "int8",
+      "dir": "in"
+     },
+     "candidates": {
+      "shape": [
+       300,
+       6
+      ],
+      "dtype": "fp32",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "anchor",
+      "range": 1600
+     },
+     {
+      "var": "cls",
+      "range": 80
+     }
+    ],
+    "body": {
+     "cmp": 1
+    },
+    "access": {
+     "head_out": {
+      "pattern": "streaming"
+     }
+    },
+    "control": {
+     "branches": 1
+    }
+   },
+   "ops_claimed": 128000,
+   "ops_unit": "ops"
+  },
+  {
+   "id": "n12",
+   "name": "non_max_suppression",
+   "phase": "iteration",
+   "affinity": "any",
+   "kind": "loop_nest",
+   "loop_nest": {
+    "arrays": {
+     "candidates": {
+      "shape": [
+       300,
+       6
+      ],
+      "dtype": "fp32",
+      "dir": "in"
+     },
+     "detections": {
+      "shape": [
+       100,
+       6
+      ],
+      "dtype": "fp32",
+      "dir": "out"
+     }
+    },
+    "loops": [
+     {
+      "var": "i",
+      "range": 300
+     },
+     {
+      "var": "j",
+      "range": 300
+     }
+    ],
+    "body": {
+     "mul": 4,
+     "add": 6,
+     "div": 1,
+     "cmp": 2
+    },
+    "access": {
+     "candidates": {
+      "pattern": "reuse",
+      "reuse": [
+       "j"
+      ]
+     }
+    },
+    "control": {
+     "branches": 1
+    }
+   },
+   "ops_claimed": 1170000,
+   "ops_unit": "ops"
+  },
+  {
+   "id": "n13",
+   "name": "publish_detections",
+   "phase": "iteration",
+   "affinity": "sw_only",
+   "kind": "opaque",
+   "opaque": {
+    "sw_time_s": 0.0005,
+    "source": "library_default"
+   }
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "src": "n1",
+   "dst": "n2",
+   "kind": "data",
+   "bytes": 2764800
+  },
+  {
+   "id": "e2",
+   "src": "n2",
+   "dst": "n3",
+   "kind": "data",
+   "bytes": 1228800
+  },
+  {
+   "id": "e3",
+   "src": "n3",
+   "dst": "n5",
+   "kind": "data",
+   "bytes": 1228800
+  },
+  {
+   "id": "e4",
+   "src": "n5",
+   "dst": "n6",
+   "kind": "data",
+   "bytes": 3276800
+  },
+  {
+   "id": "e5",
+   "src": "n6",
+   "dst": "n7",
+   "kind": "data",
+   "bytes": 1638400
+  },
+  {
+   "id": "e6",
+   "src": "n7",
+   "dst": "n8",
+   "kind": "data",
+   "bytes": 819200
+  },
+  {
+   "id": "e7",
+   "src": "n8",
+   "dst": "n9",
+   "kind": "data",
+   "bytes": 409600
+  },
+  {
+   "id": "e8",
+   "src": "n9",
+   "dst": "n10",
+   "kind": "data",
+   "bytes": 409600
+  },
+  {
+   "id": "e9",
+   "src": "n10",
+   "dst": "n11",
+   "kind": "data",
+   "bytes": 230400
+  },
+  {
+   "id": "e10",
+   "src": "n11",
+   "dst": "n12",
+   "kind": "data",
+   "bytes": 7200
+  },
+  {
+   "id": "e11",
+   "src": "n12",
+   "dst": "n13",
+   "kind": "data",
+   "bytes": 2400
+  },
+  {
+   "id": "e12",
+   "src": "n4",
+   "dst": "n5",
+   "kind": "control",
+   "bytes": 0
+  }
+ ],
+ "constraints": {
+  "deadline_s": 0.03333333333333333
+ },
+ "costs": {
+  "nodes": [
+   {
+    "id": "n1",
+    "sw": {
+     "time_s": {
+      "value": 0.002,
+      "lo": 0.001,
+      "hi": 0.003,
+      "source": "library_default"
+     }
+    }
+   },
+   {
+    "id": "n2",
+    "ops_estimated": 4915200,
+    "sw": {
+     "time_s": {
+      "value": 0.000853333,
+      "lo": 0.000597333,
+      "hi": 0.00110933,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 3,
+      "time_s": {
+       "value": 0.0020481,
+       "lo": 0.00143367,
+       "hi": 0.00266253,
+       "source": "roofline"
+      },
+      "ii_s": 0.002048,
+      "resources": {
+       "lut": 1596,
+       "ff": 2394,
+       "dsp": 6,
+       "bram18k": 1
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 12,
+      "time_s": {
+       "value": 0.0019968,
+       "lo": 0.00139776,
+       "hi": 0.00259584,
+       "source": "roofline"
+      },
+      "ii_s": 0.0019968,
+      "resources": {
+       "lut": 1884,
+       "ff": 2826,
+       "dsp": 24,
+       "bram18k": 1
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 48,
+      "time_s": {
+       "value": 0.0019968,
+       "lo": 0.00139776,
+       "hi": 0.00259584,
+       "source": "roofline"
+      },
+      "ii_s": 0.0019968,
+      "resources": {
+       "lut": 3036,
+       "ff": 4554,
+       "dsp": 96,
+       "bram18k": 1
+      }
+     }
+    ]
+   },
+   {
+    "id": "n3",
+    "ops_estimated": 1228800,
+    "sw": {
+     "time_s": {
+      "value": 0.00024576,
+      "lo": 0.000172032,
+      "hi": 0.000319488,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.0061441,
+       "lo": 0.00430087,
+       "hi": 0.00798733,
+       "source": "roofline"
+      },
+      "ii_s": 0.006144,
+      "resources": {
+       "lut": 1508,
+       "ff": 2262,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0015361,
+       "lo": 0.00107527,
+       "hi": 0.00199693,
+       "source": "roofline"
+      },
+      "ii_s": 0.001536,
+      "resources": {
+       "lut": 1532,
+       "ff": 2298,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 0.0012288,
+       "lo": 0.00086016,
+       "hi": 0.00159744,
+       "source": "roofline"
+      },
+      "ii_s": 0.0012288,
+      "resources": {
+       "lut": 1628,
+       "ff": 2442,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n4",
+    "ops_estimated": 0,
+    "sw": {
+     "time_s": {
+      "value": 0.00064,
+      "lo": 0.000448,
+      "hi": 0.000832,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.0040001,
+       "lo": 0.00280007,
+       "hi": 0.00520013,
+       "source": "roofline"
+      },
+      "ii_s": 0.004,
+      "resources": {
+       "lut": 1500,
+       "ff": 2250,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0032,
+       "lo": 0.00224,
+       "hi": 0.00416,
+       "source": "roofline"
+      },
+      "ii_s": 0.0032,
+      "resources": {
+       "lut": 1500,
+       "ff": 2250,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 0.0032,
+       "lo": 0.00224,
+       "hi": 0.00416,
+       "source": "roofline"
+      },
+      "ii_s": 0.0032,
+      "resources": {
+       "lut": 1500,
+       "ff": 2250,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n5",
+    "ops_estimated": 88473600,
+    "sw": {
+     "time_s": {
+      "value": 0.01536,
+      "lo": 0.010752,
+      "hi": 0.019968,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 9,
+      "time_s": {
+       "value": 0.0491521,
+       "lo": 0.0344065,
+       "hi": 0.0638977,
+       "source": "roofline"
+      },
+      "ii_s": 0.049152,
+      "resources": {
+       "lut": 1572,
+       "ff": 2358,
+       "dsp": 5,
+       "bram18k": 7
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 36,
+      "time_s": {
+       "value": 0.0122881,
+       "lo": 0.00860167,
+       "hi": 0.0159745,
+       "source": "roofline"
+      },
+      "ii_s": 0.012288,
+      "resources": {
+       "lut": 1788,
+       "ff": 2682,
+       "dsp": 18,
+       "bram18k": 20
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 144,
+      "time_s": {
+       "value": 0.0030721,
+       "lo": 0.00215047,
+       "hi": 0.00399373,
+       "source": "roofline"
+      },
+      "ii_s": 0.003072,
+      "resources": {
+       "lut": 2652,
+       "ff": 3978,
+       "dsp": 72,
+       "bram18k": 74
+      }
+     }
+    ]
+   },
+   {
+    "id": "n6",
+    "ops_estimated": 471859200,
+    "sw": {
+     "time_s": {
+      "value": 0.08192,
+      "lo": 0.057344,
+      "hi": 0.106496,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 9,
+      "time_s": {
+       "value": 0.262144,
+       "lo": 0.183501,
+       "hi": 0.340787,
+       "source": "roofline"
+      },
+      "ii_s": 0.262144,
+      "resources": {
+       "lut": 1572,
+       "ff": 2358,
+       "dsp": 5,
+       "bram18k": 17
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 36,
+      "time_s": {
+       "value": 0.0655361,
+       "lo": 0.0458753,
+       "hi": 0.0851969,
+       "source": "roofline"
+      },
+      "ii_s": 0.065536,
+      "resources": {
+       "lut": 1788,
+       "ff": 2682,
+       "dsp": 18,
+       "bram18k": 27
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 144,
+      "time_s": {
+       "value": 0.0163841,
+       "lo": 0.0114689,
+       "hi": 0.0212993,
+       "source": "roofline"
+      },
+      "ii_s": 0.016384,
+      "resources": {
+       "lut": 2652,
+       "ff": 3978,
+       "dsp": 72,
+       "bram18k": 81
+      }
+     }
+    ]
+   },
+   {
+    "id": "n7",
+    "ops_estimated": 471859200,
+    "sw": {
+     "time_s": {
+      "value": 0.08192,
+      "lo": 0.057344,
+      "hi": 0.106496,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 9,
+      "time_s": {
+       "value": 0.262144,
+       "lo": 0.183501,
+       "hi": 0.340787,
+       "source": "roofline"
+      },
+      "ii_s": 0.262144,
+      "resources": {
+       "lut": 1572,
+       "ff": 2358,
+       "dsp": 5,
+       "bram18k": 41
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 36,
+      "time_s": {
+       "value": 0.0655361,
+       "lo": 0.0458753,
+       "hi": 0.0851969,
+       "source": "roofline"
+      },
+      "ii_s": 0.065536,
+      "resources": {
+       "lut": 1788,
+       "ff": 2682,
+       "dsp": 18,
+       "bram18k": 41
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 144,
+      "time_s": {
+       "value": 0.0163841,
+       "lo": 0.0114689,
+       "hi": 0.0212993,
+       "source": "roofline"
+      },
+      "ii_s": 0.016384,
+      "resources": {
+       "lut": 2652,
+       "ff": 3978,
+       "dsp": 72,
+       "bram18k": 81
+      }
+     }
+    ]
+   },
+   {
+    "id": "n8",
+    "ops_estimated": 471859200,
+    "sw": {
+     "time_s": {
+      "value": 0.08192,
+      "lo": 0.057344,
+      "hi": 0.106496,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 9,
+      "time_s": {
+       "value": 0.262144,
+       "lo": 0.183501,
+       "hi": 0.340787,
+       "source": "roofline"
+      },
+      "ii_s": 0.262144,
+      "resources": {
+       "lut": 1572,
+       "ff": 2358,
+       "dsp": 5,
+       "bram18k": 137
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 36,
+      "time_s": {
+       "value": 0.0655361,
+       "lo": 0.0458753,
+       "hi": 0.0851969,
+       "source": "roofline"
+      },
+      "ii_s": 0.065536,
+      "resources": {
+       "lut": 1788,
+       "ff": 2682,
+       "dsp": 18,
+       "bram18k": 137
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 144,
+      "time_s": {
+       "value": 0.0163841,
+       "lo": 0.0114689,
+       "hi": 0.0212993,
+       "source": "roofline"
+      },
+      "ii_s": 0.016384,
+      "resources": {
+       "lut": 2652,
+       "ff": 3978,
+       "dsp": 72,
+       "bram18k": 137
+      }
+     }
+    ]
+   },
+   {
+    "id": "n9",
+    "ops_estimated": 943718400,
+    "sw": {
+     "time_s": {
+      "value": 0.16384,
+      "lo": 0.114688,
+      "hi": 0.212992,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 9,
+      "time_s": {
+       "value": 0.524288,
+       "lo": 0.367002,
+       "hi": 0.681575,
+       "source": "roofline"
+      },
+      "ii_s": 0.524288,
+      "resources": {
+       "lut": 1572,
+       "ff": 2358,
+       "dsp": 5,
+       "bram18k": 265
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 36,
+      "time_s": {
+       "value": 0.131072,
+       "lo": 0.0917505,
+       "hi": 0.170394,
+       "source": "roofline"
+      },
+      "ii_s": 0.131072,
+      "resources": {
+       "lut": 1788,
+       "ff": 2682,
+       "dsp": 18,
+       "bram18k": 265
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 144,
+      "time_s": {
+       "value": 0.0327681,
+       "lo": 0.0229377,
+       "hi": 0.0425985,
+       "source": "roofline"
+      },
+      "ii_s": 0.032768,
+      "resources": {
+       "lut": 2652,
+       "ff": 3978,
+       "dsp": 72,
+       "bram18k": 265
+      }
+     }
+    ]
+   },
+   {
+    "id": "n10",
+    "ops_estimated": 58982400,
+    "sw": {
+     "time_s": {
+      "value": 0.01024,
+      "lo": 0.007168,
+      "hi": 0.013312,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.294912,
+       "lo": 0.206438,
+       "hi": 0.383386,
+       "source": "roofline"
+      },
+      "ii_s": 0.294912,
+      "resources": {
+       "lut": 1508,
+       "ff": 2262,
+       "dsp": 1,
+       "bram18k": 16
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0737281,
+       "lo": 0.0516097,
+       "hi": 0.0958465,
+       "source": "roofline"
+      },
+      "ii_s": 0.073728,
+      "resources": {
+       "lut": 1532,
+       "ff": 2298,
+       "dsp": 2,
+       "bram18k": 16
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 0.0184321,
+       "lo": 0.0129025,
+       "hi": 0.0239617,
+       "source": "roofline"
+      },
+      "ii_s": 0.018432,
+      "resources": {
+       "lut": 1628,
+       "ff": 2442,
+       "dsp": 8,
+       "bram18k": 16
+      }
+     }
+    ]
+   },
+   {
+    "id": "n11",
+    "ops_estimated": 128000,
+    "sw": {
+     "time_s": {
+      "value": 9.33333e-05,
+      "lo": 6.53333e-05,
+      "hi": 0.000121333,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.0012801,
+       "lo": 0.00089607,
+       "hi": 0.00166413,
+       "source": "roofline"
+      },
+      "ii_s": 0.00128,
+      "resources": {
+       "lut": 1628,
+       "ff": 2442,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0003201,
+       "lo": 0.00022407,
+       "hi": 0.00041613,
+       "source": "roofline"
+      },
+      "ii_s": 0.00032,
+      "resources": {
+       "lut": 2012,
+       "ff": 3018,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 0.0001188,
+       "lo": 8.316e-05,
+       "hi": 0.00015444,
+       "source": "roofline"
+      },
+      "ii_s": 0.0001188,
+      "resources": {
+       "lut": 3548,
+       "ff": 5322,
+       "dsp": 0,
+       "bram18k": 0
+      }
+     }
+    ]
+   },
+   {
+    "id": "n12",
+    "ops_estimated": 1170000,
+    "sw": {
+     "time_s": {
+      "value": 0.000853125,
+      "lo": 0.000597187,
+      "hi": 0.00110906,
+      "source": "profile_model"
+     }
+    },
+    "hw": [
+     {
+      "point": "p1",
+      "parallelism": 1,
+      "time_s": {
+       "value": 0.0009001,
+       "lo": 0.00063007,
+       "hi": 0.00117013,
+       "source": "roofline"
+      },
+      "ii_s": 0.0009,
+      "resources": {
+       "lut": 3548,
+       "ff": 5322,
+       "dsp": 24,
+       "bram18k": 4
+      }
+     },
+     {
+      "point": "p2",
+      "parallelism": 4,
+      "time_s": {
+       "value": 0.0002251,
+       "lo": 0.00015757,
+       "hi": 0.00029263,
+       "source": "roofline"
+      },
+      "ii_s": 0.000225,
+      "resources": {
+       "lut": 9692,
+       "ff": 14538,
+       "dsp": 96,
+       "bram18k": 4
+      }
+     },
+     {
+      "point": "p3",
+      "parallelism": 16,
+      "time_s": {
+       "value": 5.635e-05,
+       "lo": 3.9445e-05,
+       "hi": 7.3255e-05,
+       "source": "roofline"
+      },
+      "ii_s": 5.625e-05,
+      "resources": {
+       "lut": 34268,
+       "ff": 51402,
+       "dsp": 384,
+       "bram18k": 8
+      }
+     }
+    ]
+   },
+   {
+    "id": "n13",
+    "sw": {
+     "time_s": {
+      "value": 0.0005,
+      "lo": 0.00025,
+      "hi": 0.00075,
+      "source": "library_default"
+     }
+    }
+   }
+  ],
+  "edges": []
+ }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "kv260",
+  "name": "Kria KV260 (test fixture)",
+  "summary": "Kria K26 SOM: 4x Cortex-A53 @ 1.333 GHz, 117k LUT, 1248 DSP",
+  "cpu": {
+    "name": "cortex-a53", "cores": 4, "freq_hz": 1.333e9,
+    "ops_per_cycle": {"int8": 16, "uint8": 16, "int16": 8, "int32": 4, "fp16": 0, "fp32": 4},
+    "efficiency": 0.3,
+    "provenance": {"source": "estimated", "url": "", "note": "fixture values, not authoritative"}
+  },
+  "fpga": {
+    "part": "xck26-sfvc784-2LV-c", "fclk_hz": 2.0e8,
+    "capacity": {"lut": 117120, "ff": 234240, "dsp": 1248, "bram18k": 288, "uram": 64},
+    "provenance": {"source": "datasheet", "url": "", "note": "fixture values, not authoritative"}
+  },
+  "dram": {
+    "bytes": 4294967296, "bandwidth_Bps": 1.2e10,
+    "provenance": {"source": "estimated", "url": "", "note": "fixture values, not authoritative"}
+  },
+  "interfaces": {
+    "default": "axi_hp0",
+    "axi_hp0": {
+      "bandwidth_Bps": 3.0e9, "setup_s": 1.0e-5, "note": "AXI HP0, DMA",
+      "provenance": {"source": "estimated", "url": "", "note": "fixture values, not authoritative"}
+    }
+  }
+}

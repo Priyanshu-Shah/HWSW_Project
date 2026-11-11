@@ -1,0 +1,117 @@
+{
+  "id": "t09_kalman_filter",
+  "title": "Kalman filter at 1 kHz, hard 1 ms limit",
+  "task": "Run a 12-state Kalman filter fusing a 6-value sensor measurement at 1 kHz on a PYNQ-Z2; every update must finish within 1 ms.",
+  "answers": [
+    {
+      "keywords": [
+        "data type",
+        "precision",
+        "dtype",
+        "bit",
+        "fixed",
+        "float"
+      ],
+      "answer": "fp32"
+    },
+    {
+      "keywords": [
+        "state"
+      ],
+      "answer": "12"
+    },
+    {
+      "keywords": [
+        "measurement",
+        "sensor",
+        "observation"
+      ],
+      "answer": "6"
+    },
+    {
+      "keywords": [
+        "hard or soft",
+        "soft",
+        "deadline",
+        "strict",
+        "every frame",
+        "real-time",
+        "real time",
+        "miss",
+        "drop",
+        "timing",
+        "hardness"
+      ],
+      "answer": "hard"
+    },
+    {
+      "keywords": [
+        "board",
+        "platform",
+        "fpga",
+        "device"
+      ],
+      "answer": "pynq_z2"
+    }
+  ],
+  "expected": {
+    "platform": "pynq_z2",
+    "arrival_kind": "periodic",
+    "hardness": "hard",
+    "deadline_s": 0.001
+  },
+  "roles": {
+    "n1": [
+      "read",
+      "sensor",
+      "measure",
+      "input",
+      "acquire"
+    ],
+    "n2": [
+      "predict",
+      "state",
+      "propagat"
+    ],
+    "n3": [
+      "predict",
+      "covariance",
+      "propagat"
+    ],
+    "n4": [
+      "innovation",
+      "covariance",
+      "residual"
+    ],
+    "n5": [
+      "invert",
+      "inverse",
+      "inversion",
+      "solve",
+      "cholesky",
+      "decompos"
+    ],
+    "n6": [
+      "gain",
+      "kalman"
+    ],
+    "n7": [
+      "update",
+      "correct",
+      "state",
+      "estimate"
+    ],
+    "n8": [
+      "update",
+      "correct",
+      "covariance"
+    ],
+    "n9": [
+      "write",
+      "output",
+      "publish",
+      "send",
+      "estimate"
+    ]
+  }
+}

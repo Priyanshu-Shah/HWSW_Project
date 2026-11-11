@@ -37,11 +37,14 @@
         <span class="spacer"></span>
         <button id="validate" type="button" disabled>Validate</button>
         <button id="cost" type="button" disabled>Cost it</button>
+        <button id="partition-button" type="button" disabled
+                title="Run the partitioner on the costed graph">Partition</button>
         <button id="download" type="button" class="link" disabled>Download JSON</button>
       </div>
 
       <div id="status" role="status"></div>
       <div id="bounds" hidden></div>
+      <div id="partition" hidden></div>
 
       <nav id="tabs" aria-label="Views">
         <button type="button" data-tab="graph" class="active">Graph</button>
@@ -59,6 +62,11 @@
           <span><i class="swatch hw"></i>FPGA only</span>
           <span><i class="swatch any"></i>either</span>
           <span><i class="swatch setup"></i>runs once (setup)</span>
+        </div>
+        <div id="legend-partition" hidden>
+          <span><i class="swatch on-sw"></i>runs on the CPU</span>
+          <span><i class="swatch on-hw"></i>runs on the FPGA</span>
+          <span><i class="swatch setup"></i>runs once (setup, not partitioned)</span>
         </div>
         <div id="details-splitter" class="splitter splitter-row" role="separator"
              aria-orientation="horizontal" tabindex="0"
