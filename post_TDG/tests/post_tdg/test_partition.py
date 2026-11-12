@@ -1,4 +1,4 @@
-"""partition(): exact path (<= 40 nodes), GNN + GA path (> 40), the best-effort answer, and the CLI."""
+"""partition(): portfolio with CP-SAT (<= 40 nodes), GNN + GA path (> 40), the best-effort answer, and the CLI."""
 
 import copy
 import json
@@ -62,7 +62,7 @@ def test_large_graphs_use_the_gnn_seeded_ga(monkeypatch):
     tdg, board = chained_copies(*tdg_named("t10_video_stabilization"), copies=6)  # 54 nodes
     assert len(tdg["nodes"]) > module.EXACT_MAX_TASKS
     result = partition(tdg, board, time_limit_s=3, samples=100).result
-    assert result["solver"]["method"] == "gnn+ga"
+    assert result["solver"]["method"] == "ga+gnn"
     assert len(result["nodes"]) == 54
     assert result["solver"]["lower_bound_s"] <= result["latency_s"]["nominal"] * (1 + 1e-9)
 
@@ -105,3 +105,19 @@ def chained_copies(tdg: dict, board: dict, copies: int) -> tuple[dict, dict]:
             )
     out["constraints"] = {}
     return out, board
+
+
+def test_the_portfolio_records_its_steps_and_candidates():
+    result = partition(*tdg_named("t10_video_stabilization"), samples=100)
+    params = result.raw.solver.params
+    assert any(step.startswith("CP-SAT") for step in params["steps"])
+    assert {"peft", "exact"} <= set(params["candidates"])
+    assert result.result["latency_s"]["nominal"] * 1e3 <= min(params["candidates"].values()) * (1 + 1e-9)
+
+
+def test_a_tiny_budget_skips_the_gnn_and_cp_sat():
+    result = partition(*tdg_named("t10_video_stabilization"), time_limit_s=0.02, samples=100)
+    steps = result.raw.solver.params["steps"]
+    assert steps and steps[0].startswith("SA from HEFT")
+    assert not any(step.startswith("CP-SAT") for step in steps)
+    assert result.result["nodes"]

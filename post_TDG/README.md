@@ -33,10 +33,10 @@ the fastest partition and the reason); 2 bad input; 3 crash.
 1. `post_tdg/convert.py`: costed TDG + board → the partitioner's IR (one implementation per
    way to run a node: software, or one per HW design point; setup nodes dropped; one iteration
    with the deadline, per D3).
-2. `post_tdg/partition.py`:
-   - up to 40 nodes: exact solver (CP-SAT + relaxation bound), warm-started with PEFT,
-     MAGELLAN and the GNN. Proven optimum in under a second on our graphs;
-   - larger: GNN-seeded genetic algorithm (`fastheur/`), then certified against the bound.
+2. `post_tdg/portfolio.py` (from the integrated package v2), called by `post_tdg/partition.py`:
+   compiled PEFT first; then the GA seeded with GNN samples (SA for budgets under 50 ms, no GNN
+   above 200 nodes); then, up to 40 nodes (or 100 with a ≥ 10 s budget), CP-SAT warm-started with
+   every candidate. Proven optimum in 1–2.5 s on our graphs; larger plans are certified against the bound.
 3. Every plan is scored by one simulator (`sim/`), with shared-bus contention and FPGA
    capacity; Monte Carlo over the cost ranges gives p05–p95.
 
@@ -47,10 +47,11 @@ the fastest partition and the reason); 2 bad input; 3 crash.
 | `post_tdg/` | Glue for this repo: converter, solver choice, `partition` CLI |
 | `schemas/ estimate/ sim/ solvers/ diagnostics/ metrics/ datagen/` | The partitioner as handed over (exact, heuristics, GNN; see `docs/handover/`) |
 | `fastheur/` | Fast compiled heuristics (SA, tabu, GA, …) and `bridge.py` (GNN sampling); package renamed from `hwsw` |
-| `models/gnn_r2_all_base_s1.pt` | GNN chosen on validation data in the Thor run 2 (`docs/thor_run2_summary.md`) |
+| `models/gnn_r2_all_base_s1.pt` | GNN chosen on validation data in the Thor run 2 (`docs/thor_run2_summary.md`, `docs/person3_results.md`) |
 | `data/` | Test data for the upstream tests (synthetic labels, GCPS graphs) |
 | `tests/` | Upstream tests, `tests/fastheur/`, and `tests/post_tdg/` (with costed benchmark fixtures) |
 | `docs/` | `contract.md`, `model.md`, handover notes, results of the heuristics and Thor runs |
 
 All training and test graphs of the partitioner are synthetic. The Thor run folder
-(`../Partiotiner_THOR_RUN_v2/`, caches and outputs) is kept out of git.
+(`../Partiotiner_THOR_RUN_v2/`, caches and outputs) and the integrated package v2
+(`../HWSW_integrated_v2/`, source of the portfolio; its code is merged here) are kept out of git.

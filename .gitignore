@@ -12,3 +12,6 @@ runs/
 
 # Partitioner Thor run folder: caches, outputs, models (code copied into post_TDG/)
 Partiotiner_THOR_RUN_v2/
+
+# Integrated partitioner package v2 (ML + portfolio); code merged into post_TDG/, data_big kept here
+HWSW_integrated_v2/

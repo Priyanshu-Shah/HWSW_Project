@@ -1,31 +1,31 @@
 """Costed TDG + board -> HW/SW partition (`partition.result.json`). Decision D8 in `decisions.md`.
 
-- Up to `EXACT_MAX_TASKS` iteration nodes: the exact component (`solvers.exact`), warm-started with PEFT,
-  MAGELLAN and the GNN's greedy plan. It returns a proven optimum, or the best plan and a valid lower bound.
-- Larger graphs: the fast GA (`fastheur`) seeded with GNN samples (best mix on the Thor run 2), then PEFT as a
-  fallback; the best plan is certified against the mapping-relaxation bound.
-- Every plan is scored by the one simulator (`sim.evaluate`); Monte Carlo gives the latency range.
+The solver is the budget-driven portfolio in `portfolio.py` (from the integrated package v2): compiled PEFT
+first, then the GA seeded with GNN samples (or SA for tiny budgets), then CP-SAT warm-started with every candidate
+on graphs up to 40 nodes (budget >= 2 s) and 41-100 nodes (budget >= 10 s). Every plan is scored by the one
+simulator (`sim.evaluate`); Monte Carlo gives the latency range. Plans the exact phase did not see are certified
+against the mapping-relaxation bound.
 """
 
 from __future__ import annotations
 
-import contextlib
 import dataclasses
-import time
 from dataclasses import dataclass
 from pathlib import Path
 
 from estimate import Option, annotate
 from estimate.annotate import Problem
+from post_tdg import portfolio
 from post_tdg.convert import FPGA_PE, SW_IMPL, Conversion, convert
 from schemas.result import Result, SolverInfo
 from sim import evaluate
 from solvers import exact
 from solvers.common import build_result
-from solvers.heuristics import Plan, all_sw, plan
+from solvers.heuristics import all_sw
 
 RESULT_VERSION = "0.1"
-EXACT_MAX_TASKS = 40  # CP-SAT proves optima up to 40 tasks in about a second (handover benchmarks)
+EXACT_MAX_TASKS = portfolio.RULES["exact_max_tasks_small"]
+CERTIFY_SHARE = 0.3  # of the budget, at least 1 s: relaxation bound for plans the exact phase did not see
 DEFAULT_TIME_LIMIT_S = 10.0
 MONTE_CARLO_SAMPLES = 1000
 DEFAULT_GNN = Path(__file__).resolve().parents[1] / "models" / "gnn_r2_all_base_s1.pt"
@@ -48,16 +48,19 @@ def partition(
 ) -> Partition:
     conversion = convert(costed_tdg, board)
     problem = annotate(conversion.graph, conversion.platform)
+    graph = conversion.graph.model_dump(mode="json", exclude_none=True)
+    platform = conversion.platform.model_dump(mode="json", exclude_none=True)
     gnn, gnn_note = _load_gnn(gnn_path)
-    raw = _solve(problem, conversion, gnn, time_limit_s, seed, samples)
+    outcome = portfolio.solve(problem, graph, platform, gnn, time_limit_s, seed)
     best_effort = False
-    if not raw.mapping and problem.deadline_ms is not None:
-        # No partition meets the deadline: still give the fastest one, with the deadline feedback kept.
-        fastest = _solve(_without_deadline(problem), conversion, gnn, time_limit_s, seed, samples)
-        if fastest.mapping:
-            fastest.feasible = False
-            fastest.diagnostics = raw.diagnostics
-            raw, best_effort = fastest, True
+    if problem.deadline_ms is not None and (outcome.best is None or not outcome.best.feasible):
+        # No partition meets the deadline: search again without it for the fastest one. The result is still
+        # built against the deadline, so it stays infeasible and keeps the fb1 feedback.
+        free = portfolio.solve(_without_deadline(problem), {**graph, "constraints": {}}, platform, gnn,
+                               time_limit_s, seed)
+        if free.best is not None:
+            outcome, best_effort = free, True
+    raw = _to_raw(problem, outcome, time_limit_s, seed, samples)
     if gnn_note:
         raw.solver.notes = "; ".join(filter(None, [raw.solver.notes, gnn_note]))
     result = to_result_json(costed_tdg, board, conversion, problem, raw)
@@ -65,103 +68,40 @@ def partition(
     return Partition(result=result, raw=raw)
 
 
-def _solve(problem: Problem, conversion: Conversion, gnn, time_limit_s: float, seed: int, samples: int) -> Result:
-    if len(problem.order) <= EXACT_MAX_TASKS:
-        return _solve_exact(problem, gnn, time_limit_s, seed, samples)
-    return _solve_large(problem, conversion, gnn, time_limit_s, seed, samples)
-
-
 def _without_deadline(problem: Problem) -> Problem:
     return dataclasses.replace(problem, deadline_ms=None, _norms=None)
 
 
-# ------------------------------------------------------------------------------------------- solvers
-def _solve_exact(problem: Problem, gnn, time_limit_s: float, seed: int, samples: int) -> Result:
-    warm = [plan(problem, "peft"), plan(problem, "magellan")]
-    if gnn is not None:
-        decoded = gnn.decode(problem, gnn.featurize(problem), samples=16, seed=seed)
-        warm.append(Plan(decoded.mapping, decoded.priority))
-    return exact.run(problem, time_limit_s=time_limit_s, warm_starts=warm, seed=seed, n_samples=samples)
-
-
-def _solve_large(problem: Problem, conversion: Conversion, gnn, time_limit_s: float, seed: int, samples: int) -> Result:
-    from fastheur import bridge
-    from fastheur.algos import METHODS
-    from fastheur.fast import Fast, warmup
-    from fastheur.instance import from_graph_platform
-
-    t0 = time.perf_counter()
-    warmup()
-    inst = from_graph_platform(
-        conversion.graph.model_dump(mode="json", exclude_none=True),
-        conversion.platform.model_dump(mode="json", exclude_none=True),
-    )
-    fast = Fast(inst)
-    seeds = []
-    if gnn is not None:
-        sampler = bridge.GnnSampler(gnn, problem, gnn.featurize(problem), inst)
-        seeds = [(c, k) for c, k, _, _ in sampler.population(fast, m=256, keep=8, seed=seed, time_cap_s=0.25)]
-    with _extra_ga_seeds(seeds):
-        found = METHODS["ga"](inst, fast, seed, max(0.5, 0.7 * time_limit_s))
-    candidates = [plan(problem, "peft")]
-    if found.plan is not None:
-        candidates.append(
-            Plan(
-                bridge.from_opt(inst, problem, found.plan.opt),
-                bridge.handover_priority(inst, found.plan.order),
-                insertion=found.plan.insertion,
-            )
-        )
-    best = min(candidates, key=lambda p: _score(problem, p))
-    left = max(1.0, time_limit_s - (time.perf_counter() - t0))
-    cert = exact.certify(problem, best, time_limit_s=left)
-    status = {"optimal": "optimal", "infeasible": "infeasible"}.get(cert.status, "heuristic")
+def _to_raw(problem: Problem, outcome: portfolio.Outcome, time_limit_s: float, seed: int, samples: int) -> Result:
+    """The best candidate as the partitioner's `Result`, with a lower bound and gap (CP-SAT's, else certified)."""
+    best = outcome.best
+    if best is None:
+        info = SolverInfo(name="none", status="infeasible", runtime_s=outcome.runtime_s, seed=seed,
+                          params={"time_limit_s": time_limit_s, "steps": outcome.steps})
+        return build_result(problem, None, info, n_samples=samples, seed=seed, strong_bound=True)
+    bound_ms, gap, notes, status = outcome.bound_ms, outcome.gap, None, best.status
+    if not outcome.exact_ran or bound_ms is None:
+        cert = exact.certify(problem, best.plan, time_limit_s=max(1.0, CERTIFY_SHARE * time_limit_s))
+        bound_ms, gap, notes = cert.bound_ms, cert.gap, "; ".join(cert.certificate) or None
+        if cert.status == "optimal":
+            status = "optimal"
+    elif best.name != "exact" and best.makespan_ms > 0:
+        gap = max(0.0, (best.makespan_ms - bound_ms) / best.makespan_ms)  # CP-SAT's gap is for its own plan
+    if status == "optimal" and best.name != "exact" and outcome.exact_ran:
+        notes = "CP-SAT proved this plan optimal"
     info = SolverInfo(
-        name="gnn+ga" if seeds else "ga",
-        status=status,  # type: ignore[arg-type]
-        runtime_s=time.perf_counter() - t0,
+        name=best.name,
+        status={"optimal": "optimal", "feasible": "feasible"}.get(status, "heuristic"),  # type: ignore[arg-type]
+        runtime_s=outcome.runtime_s,
         seed=seed,
-        objective=cert.makespan_ms,
-        params={"time_limit_s": time_limit_s, "bound_ms": cert.bound_ms, "gap": cert.gap},
-        notes="; ".join(cert.certificate) or None,
+        objective=best.makespan_ms,
+        params={"time_limit_s": time_limit_s, "bound_ms": bound_ms, "gap": gap, "steps": outcome.steps,
+                "candidates": {c.name: c.makespan_ms for c in outcome.candidates}},
+        notes=notes,
     )
-    return build_result(
-        problem,
-        best.mapping,
-        info,
-        priority=best.priority,
-        insertion=best.insertion,
-        n_samples=samples,
-        seed=seed,
-        strong_bound=True,
-    )
-
-
-def _score(problem: Problem, candidate: Plan) -> tuple[bool, float]:
-    ev = evaluate(problem, candidate.mapping, priority=candidate.priority, insertion=candidate.insertion)
-    return (not ev.feasible, ev.sim.makespan)
-
-
-@contextlib.contextmanager
-def _extra_ga_seeds(extra: list):
-    """The GA seeds itself with HEFT and all-SW; add the GNN samples (as the Thor run 2 did)."""
-    from fastheur.algos import evo
-
-    original = evo._seeds
-
-    def seeds(inst, fast, tracker):
-        out = original(inst, fast, tracker)
-        for opt, keys in extra:
-            makespan, excess = fast.evaluate(opt)
-            tracker.offer(makespan, excess, opt)
-            out.append((opt.copy(), keys.copy()))
-        return out
-
-    evo._seeds = seeds
-    try:
-        yield
-    finally:
-        evo._seeds = original
+    plan = best.plan
+    return build_result(problem, plan.mapping, info, priority=plan.priority, insertion=plan.insertion,
+                        n_samples=samples, seed=seed, strong_bound=True)
 
 
 def _load_gnn(path: Path | None):

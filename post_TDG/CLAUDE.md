@@ -2,7 +2,7 @@
 
 Partitioner team's folder. Input: a costed TDG (`../TDG/` contract) + board file (`../library/`). Output: `partition.result.json`.
 
-- `post_tdg/`: our glue. `convert.py` (D7), `partition.py` (D8), `cli.py` (`partition` command).
+- `post_tdg/`: our glue. `convert.py` (D7), `portfolio.py` + `partition.py` (D8, solver portfolio from `../HWSW_integrated_v2/`), `cli.py` (`partition` command).
 - Upstream partitioner code, kept as handed over: `schemas/ estimate/ sim/ solvers/ diagnostics/ metrics/ datagen/` (exact solver, heuristics, GNN) and `fastheur/` (fast SA/tabu/GA, renamed from `hwsw`). Change it only to fix a bug; note why in `docs/partitioner_decisions_log.md`.
 - Decisions: `decisions.md` (D7, D8). Score every plan with `sim.evaluate`.
 - **Never edit `../TDG/`, `../library/`, `../pre_TDG/`.** Format change needed: stop and tell the user.
